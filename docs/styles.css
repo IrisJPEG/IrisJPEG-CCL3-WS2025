@@ -38,7 +38,7 @@ ul {
     list-style-type: disc;
     padding-left: 20px;
 }
-img {
+.screenshots img {
     height: 100%;
     max-width: 200px;
     display: block;
@@ -76,4 +76,8 @@ main{
     border-radius: 8px;
     width: fit-content;
     transition: background-color 0.3s ease;
+}
+
+.userflow{
+    width:400px;
 }

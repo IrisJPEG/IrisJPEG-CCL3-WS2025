@@ -26,7 +26,7 @@ fun AddEditTaskScreen(
     var taskToEdit by remember { mutableStateOf<TaskEntity?>(null) }
     var title by remember { mutableStateOf("") }
     val selectedDays = remember { mutableStateListOf<Int>() }
-    var repeatOnce by remember { mutableStateOf(false) } // UI only
+
 
     LaunchedEffect(taskId) {
         if (taskId != -1L) {
@@ -124,22 +124,6 @@ fun AddEditTaskScreen(
                     }
                 }
 
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Checkbox(
-                        checked = repeatOnce,
-                        onCheckedChange = { repeatOnce = it },
-                        colors = CheckboxDefaults.colors(
-                            checkedColor = MindFlowColors.Primary,
-                            uncheckedColor = MindFlowColors.TextMuted,
-                            checkmarkColor = MindFlowColors.Surface
-                        )
-                    )
-                    Text(
-                        "Repeat only once",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MindFlowColors.TextSecondary
-                    )
-                }
 
                 Spacer(Modifier.weight(1f))
 

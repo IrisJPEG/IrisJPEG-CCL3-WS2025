@@ -207,15 +207,17 @@ private fun TodayTasksCard(
                 color = MindFlowColors.TextSecondary
             )
             Spacer(Modifier.weight(1f))
-            if (streakDays > 0) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(6.dp)
-                ) {
-                    Text("$streakDays", style = MaterialTheme.typography.titleMedium)
-                    Text("🔥", style = MaterialTheme.typography.titleMedium)
-                }
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(6.dp)
+            ) {
+                Text(
+                    text = "${streakDays.coerceAtLeast(0)}",
+                    style = MaterialTheme.typography.titleMedium
+                )
+                Text("🔥", style = MaterialTheme.typography.titleMedium)
             }
+
         }
 
         LinearProgressIndicator(
@@ -268,27 +270,31 @@ private fun TodayTasksCard(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            TextButton(
-                onClick = onToggleExpand,
-                enabled = canExpand
-            ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(
-                        text = if (expanded) "Collapse" else "Expand",
-                        color = MindFlowColors.TextMuted
-                    )
-                    Spacer(Modifier.width(4.dp))
-                    Icon(
-                        imageVector = if (expanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
-                        contentDescription = null,
-                        tint = MindFlowColors.TextMuted
-                    )
+            if (canExpand) {
+                TextButton(onClick = onToggleExpand) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            text = if (expanded) "Collapse" else "Expand",
+                            color = MindFlowColors.TextMuted
+                        )
+                        Spacer(Modifier.width(4.dp))
+                        Icon(
+                            imageVector = if (expanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
+                            contentDescription = null,
+                            tint = MindFlowColors.TextMuted
+                        )
+                    }
                 }
+            } else {
+                // Keeps "Manage" aligned to the right when Expand is hidden
+                Spacer(modifier = Modifier.width(1.dp))
             }
+
             TextButton(onClick = onManage) {
                 Text("Manage", color = MindFlowColors.TextMuted)
             }
         }
+
     }
 }
 

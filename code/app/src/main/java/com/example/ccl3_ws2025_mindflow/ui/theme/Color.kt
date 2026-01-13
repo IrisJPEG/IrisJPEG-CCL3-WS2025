@@ -31,7 +31,7 @@ object MindFlowColors {
     val StrokeStrong = Color(0xFF0E1B1A)
 
     // Status
-    val Success = Color(0xFF5BE06E)     // progress end
+    val Success = Color(0xFF4AB264)     // progress end
     val Danger = Color(0xFFE74C3C)
     val OverlayScrim = Color(0xB3000000)
 }

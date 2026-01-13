@@ -15,12 +15,18 @@ import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.outlined.SentimentDissatisfied
+import androidx.compose.material.icons.outlined.SentimentNeutral
+import androidx.compose.material.icons.outlined.SentimentSatisfied
+import androidx.compose.material.icons.outlined.SentimentVeryDissatisfied
+import androidx.compose.material.icons.outlined.SentimentVerySatisfied
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInParent
@@ -31,6 +37,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import androidx.navigation.NavController
 import com.example.ccl3_ws2025_mindflow.R
+import com.example.ccl3_ws2025_mindflow.data.mood.MoodType
 import com.example.ccl3_ws2025_mindflow.data.tasks.TodayTaskRow
 import com.example.ccl3_ws2025_mindflow.ui.breathing.BreathingExercise
 import com.example.ccl3_ws2025_mindflow.ui.breathing.breathingExercises
@@ -48,7 +55,7 @@ fun HomeScreen(
     val state by viewModel.uiState.collectAsState()
     var tasksExpanded by rememberSaveable { mutableStateOf(false) }
 
-    // HOISTED scroll state so BreathingCard can scroll to dropdown when expanded
+    // Hoisted scroll state so BreathingCard can scroll when expanded
     val scrollState = rememberScrollState()
 
     MindFlowBackground {
@@ -57,12 +64,13 @@ fun HomeScreen(
             Column(
                 modifier = Modifier
                     .fillMaxSize()
+                    .padding(top = 30.dp)
                     .verticalScroll(scrollState),
                 verticalArrangement = Arrangement.spacedBy(Dimens.CardGap)
             ) {
 
                 MoodJourneyHeader(
-                    moodEmoji = state.todayMood?.emoji,
+                    mood = state.todayMood,
                     onOpenJourney = { navController.navigate("moodJourney") },
                     onEditMood = { viewModel.openMoodPicker() }
                 )
@@ -83,7 +91,6 @@ fun HomeScreen(
                     onLeaveMessageForTomorrow = { navController.navigate("noteToSelf") }
                 )
 
-                // NEW breathing dropdown + auto-scroll on expand
                 BreathingCard(
                     navController = navController,
                     scrollState = scrollState
@@ -104,13 +111,13 @@ fun HomeScreen(
 
 @Composable
 private fun MoodJourneyHeader(
-    moodEmoji: String?,
+    mood: MoodType?,
     onOpenJourney: () -> Unit,
     onEditMood: () -> Unit
 ) {
     Box(modifier = Modifier.fillMaxWidth()) {
 
-        // Whole card opens journey
+        // Card itself still opens journey
         MindFlowCard(
             modifier = Modifier
                 .fillMaxWidth()
@@ -125,8 +132,8 @@ private fun MoodJourneyHeader(
                     style = MaterialTheme.typography.titleLarge,
                     modifier = Modifier.weight(1f)
                 )
-                // Reserve space so emoji overlay does not overlap text
-                Spacer(modifier = Modifier.width(56.dp))
+                // Reserve space so mood button doesn't overlap text
+                Spacer(modifier = Modifier.width(72.dp))
             }
 
             Surface(
@@ -148,22 +155,44 @@ private fun MoodJourneyHeader(
             }
         }
 
-        // Emoji hitbox (easy to tap)
-        if (moodEmoji != null) {
-            Box(
-                modifier = Modifier
-                    .align(Alignment.TopEnd)
-                    .padding(top = 8.dp, end = 8.dp)
-                    .size(56.dp)
-                    .zIndex(999f)
-                    .clip(CircleShape)
-                    .background(MindFlowColors.Surface.copy(alpha = 0.01f))
-                    .clickable { onEditMood() },
-                contentAlignment = Alignment.Center
-            ) {
-                Text(text = moodEmoji, style = MaterialTheme.typography.titleLarge)
+        Box(
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .padding(top =0.dp, end = 0.dp) // keep it inside the card corner
+                .size(72.dp)                     // BIG hit target (easy to tap)
+                .zIndex(999f)
+                .clip(CircleShape)
+                .background(MindFlowColors.Surface.copy(alpha = 0.001f)) // practically invisible but captures taps
+                .clickable { onEditMood() },
+            contentAlignment = Alignment.Center
+        ) {
+            if (mood != null) {
+                Icon(
+                    imageVector = moodToIcon(mood),
+                    contentDescription = "Edit mood",
+                    tint = MindFlowColors.TextPrimary,
+                    modifier = Modifier.size(34.dp)
+                        .offset(y = (-6).dp)                )
+            } else {
+                // If there's no mood yet, still show a "neutral" icon so user can tap it
+                Icon(
+                    imageVector = Icons.Outlined.SentimentNeutral,
+                    contentDescription = "Set mood",
+                    tint = MindFlowColors.TextPrimary,
+                    modifier = Modifier.size(34.dp)
+                )
             }
         }
+    }
+}
+
+private fun moodToIcon(mood: MoodType): ImageVector {
+    return when (mood) {
+        MoodType.VERY_SAD -> Icons.Outlined.SentimentVeryDissatisfied
+        MoodType.SAD -> Icons.Outlined.SentimentDissatisfied
+        MoodType.NEUTRAL -> Icons.Outlined.SentimentNeutral
+        MoodType.HAPPY -> Icons.Outlined.SentimentSatisfied
+        MoodType.VERY_HAPPY -> Icons.Outlined.SentimentVerySatisfied
     }
 }
 
@@ -193,7 +222,11 @@ private fun TodayTasksCard(
                 modifier = Modifier.weight(1f)
             )
             IconButton(onClick = onHistory) {
-                Icon(Icons.Default.History, contentDescription = "History", tint = MindFlowColors.TextMuted)
+                Icon(
+                    Icons.Default.History,
+                    contentDescription = "History",
+                    tint = MindFlowColors.TextMuted
+                )
             }
         }
 
@@ -207,6 +240,8 @@ private fun TodayTasksCard(
                 color = MindFlowColors.TextSecondary
             )
             Spacer(Modifier.weight(1f))
+
+            // Always show streak + fire, minimum 0
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(6.dp)
@@ -217,7 +252,6 @@ private fun TodayTasksCard(
                 )
                 Text("🔥", style = MaterialTheme.typography.titleMedium)
             }
-
         }
 
         LinearProgressIndicator(
@@ -270,6 +304,7 @@ private fun TodayTasksCard(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
+            // Expand only when needed
             if (canExpand) {
                 TextButton(onClick = onToggleExpand) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -286,7 +321,6 @@ private fun TodayTasksCard(
                     }
                 }
             } else {
-                // Keeps "Manage" aligned to the right when Expand is hidden
                 Spacer(modifier = Modifier.width(1.dp))
             }
 
@@ -294,7 +328,6 @@ private fun TodayTasksCard(
                 Text("Manage", color = MindFlowColors.TextMuted)
             }
         }
-
     }
 }
 
@@ -334,15 +367,13 @@ private fun BreathingCard(
     var expanded by remember { mutableStateOf(false) }
     var selectedExercise by remember { mutableStateOf<BreathingExercise?>(null) }
 
-    // Y position (px) of dropdown within the scrollable Column
+    // Not strictly needed if you always scroll to bottom, but harmless
     var dropdownTopPx by remember { mutableStateOf(0) }
 
-    // When opening, scroll to the dropdown so it’s immediately visible
     LaunchedEffect(expanded) {
         if (expanded) {
-            // wait a frame so layout is measured and dropdownTopPx is set
-            delay(16)
-            scrollState.animateScrollTo(scrollState.maxValue)
+            delay(16) // let dropdown measure
+            scrollState.animateScrollTo(scrollState.maxValue) // go to bottom
         }
     }
 
@@ -350,7 +381,6 @@ private fun BreathingCard(
         Text("Take a moment to relax", style = MaterialTheme.typography.titleLarge)
 
         Column {
-            // Tapping the pill toggles dropdown
             PillRowSurface(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -387,7 +417,6 @@ private fun BreathingCard(
                 }
             }
 
-            // Dropdown list
             if (expanded) {
                 Column(
                     modifier = Modifier

@@ -9,6 +9,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.ccl3_ws2025_mindflow.data.tasks.TaskEntity
@@ -116,9 +117,15 @@ fun AddEditTaskScreen(
                                     text = label,
                                     maxLines = 1,
                                     softWrap = false,
-                                    style = if (selected) MaterialTheme.typography.labelLarge else MaterialTheme.typography.labelMedium,
-                                    color = MindFlowColors.TextPrimary
+                                    style = MaterialTheme.typography.labelLarge.copy(
+                                        fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal
+                                    ),
+                                    color = if (selected)
+                                        MindFlowColors.TextPrimary
+                                    else
+                                        MindFlowColors.TextMuted
                                 )
+
                             }
                         }
                     }

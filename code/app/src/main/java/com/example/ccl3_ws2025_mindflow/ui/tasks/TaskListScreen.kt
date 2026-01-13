@@ -11,6 +11,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.ccl3_ws2025_mindflow.ui.theme.*
@@ -83,6 +84,7 @@ fun TaskListScreen(
     }
 }
 
+
 @Composable
 private fun TaskWeekdaysRow(daysCsv: String) {
     val labels = listOf("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")
@@ -94,11 +96,18 @@ private fun TaskWeekdaysRow(daysCsv: String) {
     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         labels.forEachIndexed { index, label ->
             val isSelected = selected.contains(index + 1)
+
             Text(
                 text = label,
-                style = if (isSelected) MaterialTheme.typography.labelLarge else MaterialTheme.typography.labelMedium,
-                color = if (isSelected) MindFlowColors.TextPrimary else MindFlowColors.TextMuted
+                style = MaterialTheme.typography.labelLarge.copy(
+                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
+                ),
+                color = if (isSelected)
+                    MindFlowColors.TextPrimary
+                else
+                    MindFlowColors.TextMuted
             )
         }
     }
 }
+

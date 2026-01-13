@@ -21,7 +21,16 @@ fun NoteToSelfScreen(
     viewModel: HomeViewModel
 ) {
     val state by viewModel.uiState.collectAsState()
-    val hasExisting = !state.tomorrowNoteSavedPreview.isNullOrBlank()
+
+    val savedText = (state.tomorrowNoteSavedPreview ?: "").trim()
+    val draftText = state.tomorrowNoteDraft.trim()
+
+    val hasExisting = savedText.isNotEmpty()
+    val hasChanges = draftText != savedText
+
+    // Prevent accidental delete: don't allow save/update if draft is blank.
+    // If you DO want deletion, tell me and I’ll give the “Delete note” button variant.
+    val canSubmit = hasChanges && draftText.isNotEmpty()
 
     MindFlowBackground {
         Scaffold(
@@ -63,7 +72,6 @@ fun NoteToSelfScreen(
 
                 Spacer(Modifier.height(2.dp))
 
-                // Big writing panel (white)
                 Surface(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -108,6 +116,7 @@ fun NoteToSelfScreen(
                             viewModel.saveTomorrowNote()
                             navController.popBackStack()
                         },
+                        enabled = canSubmit,
                         modifier = Modifier.fillMaxWidth(),
                         borderColor = MindFlowColors.Stroke,
                         textColor = MindFlowColors.Primary,

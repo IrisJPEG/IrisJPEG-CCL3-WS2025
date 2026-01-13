@@ -17,7 +17,7 @@ interface MoodDao {
     fun observeByDate(dateKey: String): Flow<MoodEntity?>
 
     // NEW: observe all moods for the journey screen
-    @Query("SELECT * FROM moods ORDER BY dateKey ASC")
+    @Query("SELECT * FROM moods ORDER BY dateKey DESC")
     fun observeAll(): Flow<List<MoodEntity>>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)

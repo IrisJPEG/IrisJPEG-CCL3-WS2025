@@ -19,20 +19,17 @@ import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
-
 data class HomeUiState(
     val todayMood: MoodType? = null,
     val showMoodOverlay: Boolean = false,
     val yesterdayNote: String? = null,
 
-    // Used by NoteToSelf screen
     val tomorrowNoteDraft: String = "",
     val tomorrowNoteSavedPreview: String? = null,
 
-    // Today tasks
     val todayTasks: List<TodayTaskRow> = emptyList(),
 
-    val progress: Float = 0f, // 0..1
+    val progress: Float = 0f,
     val doneCount: Int = 0,
     val totalCount: Int = 0,
 
@@ -55,43 +52,33 @@ class HomeViewModel(
 ) : ViewModel() {
 
     private val formatter = DateTimeFormatter.ISO_LOCAL_DATE
-
-    // IMPORTANT: date changes must be modeled as state, not as "LocalDate.now()" calls at init time.
     private val _currentDate = MutableStateFlow(LocalDate.now())
 
-    // Draft state (screen-local, not persisted)
     private val _tomorrowDraft = MutableStateFlow("")
     private val _tomorrowDraftTouched = MutableStateFlow(false)
 
-    // Mood overlay "dismissed" state
     private val _overlayDismissedManually = MutableStateFlow(false)
 
-    /**
-     * Call this whenever the Home screen becomes visible (or on resume).
-     * If the date changed while the app was in memory, this will rebuild all flows.
-     */
+    // NEW: lets us show overlay even if mood already exists
+    private val _forceShowMoodOverlay = MutableStateFlow(false)
+
     fun refreshDate() {
         val now = LocalDate.now()
         if (_currentDate.value != now) {
             _currentDate.value = now
-
-            // Optional: reset overlay dismissal so mood prompt can show again on a new day
             _overlayDismissedManually.value = false
+            _forceShowMoodOverlay.value = false
 
-            // Optional: clear draft-touch flag so we can prefill tomorrow draft from DB for the new date
             _tomorrowDraftTouched.value = false
             _tomorrowDraft.value = ""
         }
     }
 
     private fun dateKey(date: LocalDate): String = date.format(formatter)
-
     private fun todayKey(date: LocalDate): String = dateKey(date)
     private fun yesterdayKey(date: LocalDate): String = dateKey(date.minusDays(1))
     private fun tomorrowKey(date: LocalDate): String = dateKey(date.plusDays(1))
-    private fun weekday(date: LocalDate): Int = date.dayOfWeek.value // Mon=1..Sun=7
-
-    // --- Date-dependent flows (REBUILT when _currentDate changes) ---
+    private fun weekday(date: LocalDate): Int = date.dayOfWeek.value
 
     private val todayRowsFlow = _currentDate.flatMapLatest { date ->
         taskRepo.observeTodayTasks(
@@ -101,7 +88,6 @@ class HomeViewModel(
     }
 
     private val streakFlow = _currentDate.flatMapLatest { date ->
-        // Recompute streak (and also re-run whenever today's rows change)
         todayRowsFlow.flatMapLatest {
             flow { emit(taskRepo.getDailyAllTaskStreak(todayKey(date))) }
         }
@@ -119,8 +105,6 @@ class HomeViewModel(
         noteRepo.observeNoteForDate(tomorrowKey(date))
     }
 
-    // --- Combine into partial state (keep your 2-flow combine chaining) ---
-
     private val notesFlow = combine(yNoteFlow, tNoteFlow) { y, t -> y to t }
 
     private val draftFlow = combine(_tomorrowDraft, _tomorrowDraftTouched) { draft, touched ->
@@ -128,7 +112,7 @@ class HomeViewModel(
     }
 
     private val moodNotesFlow = combine(moodFlow, notesFlow) { mood, notes ->
-        mood to notes // Pair<MoodType?, Pair<NoteEntity?, NoteEntity?>>
+        mood to notes
     }
 
     private val moodNotesRowsFlow = combine(moodNotesFlow, todayRowsFlow) { mn, rows ->
@@ -155,23 +139,23 @@ class HomeViewModel(
         HomePartial(null, null, null, emptyList(), "", false)
     )
 
-    // --- Final UI state ---
+    // include force flag so UI updates immediately
+    private val overlayInputsFlow =
+        combine(partial, _overlayDismissedManually, _forceShowMoodOverlay) { p, dismissed, forced ->
+            Triple(p, dismissed, forced)
+        }
 
-    private val partialOverlayFlow = combine(partial, _overlayDismissedManually) { p, overlayDismissed ->
-        p to overlayDismissed
-    }
-
-    val uiState: StateFlow<HomeUiState> = combine(partialOverlayFlow, streakFlow) { po, streakDays ->
-        val p = po.first
-        val overlayDismissed = po.second
+    val uiState: StateFlow<HomeUiState> = combine(overlayInputsFlow, streakFlow) { triple, streakDays ->
+        val p = triple.first
+        val dismissed = triple.second
+        val forced = triple.third
 
         val total = p.todayRows.size
         val done = p.todayRows.count { it.isCompleted }
         val progress = if (total == 0) 0f else done.toFloat() / total.toFloat()
 
-        val shouldShowOverlay = (p.mood == null) && !overlayDismissed
+        val shouldShowOverlay = (((p.mood == null) && !dismissed) || forced)
 
-        // Auto-prefill draft from saved tomorrow note ONLY if user hasn't typed yet
         val savedTomorrow = p.tNote?.text
         val effectiveDraft =
             if (!p.draftTouched && p.draft.isBlank() && !savedTomorrow.isNullOrBlank()) savedTomorrow
@@ -200,28 +184,33 @@ class HomeViewModel(
 
     fun saveTomorrowNote() {
         val text = _tomorrowDraft.value
-
         viewModelScope.launch {
-            // Use currentDate at save-time (not captured at init)
             val date = _currentDate.value
-            val key = tomorrowKey(date)
-
-            noteRepo.saveNote(key, text)
-
-            // After saving, allow future auto-prefill to come from DB again
+            noteRepo.saveNote(tomorrowKey(date), text)
             _tomorrowDraftTouched.value = false
         }
+    }
+
+    // NEW: called when emoji is tapped
+    fun openMoodPicker() {
+        _forceShowMoodOverlay.value = true
+        _overlayDismissedManually.value = false
     }
 
     fun selectMood(mood: MoodType) {
         viewModelScope.launch {
             val key = todayKey(_currentDate.value)
             moodRepo.saveMood(key, mood)
+
+            // close overlay after selection
+            _forceShowMoodOverlay.value = false
+            _overlayDismissedManually.value = false
         }
     }
 
     fun dismissOverlayOnce() {
         _overlayDismissedManually.value = true
+        _forceShowMoodOverlay.value = false
     }
 
     fun toggleTaskDone(taskId: Long) {

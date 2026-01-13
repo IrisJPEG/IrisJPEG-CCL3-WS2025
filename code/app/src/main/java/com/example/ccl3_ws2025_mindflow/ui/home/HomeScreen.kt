@@ -4,12 +4,13 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -22,13 +23,11 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.zIndex
 import androidx.navigation.NavController
 import com.example.ccl3_ws2025_mindflow.R
 import com.example.ccl3_ws2025_mindflow.data.tasks.TodayTaskRow
 import com.example.ccl3_ws2025_mindflow.ui.theme.*
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.filled.KeyboardArrowUp
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -36,110 +35,131 @@ fun HomeScreen(
     navController: NavController,
     viewModel: HomeViewModel
 ) {
-    LaunchedEffect(Unit) {
-        viewModel.refreshDate()
-    }
+    LaunchedEffect(Unit) { viewModel.refreshDate() }
 
     val state by viewModel.uiState.collectAsState()
     var tasksExpanded by rememberSaveable { mutableStateOf(false) }
 
-            MindFlowBackground {
-                Box(modifier = Modifier.padding(Dimens.ScreenPadding)) {
+    MindFlowBackground {
+        Box(modifier = Modifier.padding(Dimens.ScreenPadding)) {
 
-                    Column(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .verticalScroll(rememberScrollState()),
-                        verticalArrangement = Arrangement.spacedBy(Dimens.CardGap)
-                    ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(Dimens.CardGap)
+            ) {
 
-                        MoodJourneyHeader(
-                            moodEmoji = state.todayMood?.emoji,
-                            onClick = { navController.navigate("moodJourney") }
-                        )
+                MoodJourneyHeader(
+                    moodEmoji = state.todayMood?.emoji,
+                    onOpenJourney = { navController.navigate("moodJourney") },
+                    onEditMood = { viewModel.openMoodPicker() }
+                )
 
-                        TodayTasksCard(
-                            progress = state.progress,
-                            streakDays = state.streakDays,
-                            rows = state.todayTasks,
-                            expanded = tasksExpanded,
-                            onToggleDone = { taskId -> viewModel.toggleTaskDone(taskId) },
-                            onToggleExpand = { tasksExpanded = !tasksExpanded },
-                            onManage = { navController.navigate("tasks") },
-                            onHistory = { navController.navigate("history") }
-                        )
+                TodayTasksCard(
+                    progress = state.progress,
+                    streakDays = state.streakDays,
+                    rows = state.todayTasks,
+                    expanded = tasksExpanded,
+                    onToggleDone = { taskId -> viewModel.toggleTaskDone(taskId) },
+                    onToggleExpand = { tasksExpanded = !tasksExpanded },
+                    onManage = { navController.navigate("tasks") },
+                    onHistory = { navController.navigate("history") }
+                )
 
-                        DailyNoteToSelfCard(
-                            yesterdayNote = state.yesterdayNote,
-                            onLeaveMessageForTomorrow = {
-                                navController.navigate("noteToSelf")
-                            }
-                        )
+                DailyNoteToSelfCard(
+                    yesterdayNote = state.yesterdayNote,
+                    onLeaveMessageForTomorrow = { navController.navigate("noteToSelf") }
+                )
 
-                        BreathingCard(
-                            onClick = { navController.navigate("meditation") }
-                        )
+                BreathingCard(
+                    onClick = { navController.navigate("meditation") }
+                )
 
-                        Spacer(modifier = Modifier.height(6.dp))
-                    }
-
-                    if (state.showMoodOverlay) {
-                        MoodOverlay(
-                            onSelect = { mood -> viewModel.selectMood(mood) },
-                            onDismissOnce = { viewModel.dismissOverlayOnce() }
-                        )
-                    }
-                }
+                Spacer(modifier = Modifier.height(6.dp))
             }
 
+            if (state.showMoodOverlay) {
+                MoodOverlay(
+                    onSelect = { mood -> viewModel.selectMood(mood) },
+                    onDismissOnce = { viewModel.dismissOverlayOnce() }
+                )
+            }
+        }
+    }
 }
 
 @Composable
 private fun MoodJourneyHeader(
     moodEmoji: String?,
-    onClick: () -> Unit
+    onOpenJourney: () -> Unit,
+    onEditMood: () -> Unit
 ) {
-    MindFlowCard(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable { onClick() }
-    ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.Top
+    // IMPORTANT STRUCTURE:
+    // - Back layer: whole card is clickable to open journey
+    // - Front layer: emoji box sits on top (zIndex) and is clickable to edit mood
+    Box(modifier = Modifier.fillMaxWidth()) {
+
+        // BACK LAYER (Journey click)
+        MindFlowCard(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable { onOpenJourney() }
         ) {
-            Text(
-                "Mood journey",
-                style = MaterialTheme.typography.titleLarge,
-                modifier = Modifier.weight(1f)
-            )
-            if (moodEmoji != null) {
-                Text(moodEmoji, style = MaterialTheme.typography.titleLarge)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.Top
+            ) {
+                Text(
+                    "Mood journey",
+                    style = MaterialTheme.typography.titleLarge,
+                    modifier = Modifier.weight(1f)
+                )
+
+                // leave space so emoji overlay doesn't feel cramped
+                Spacer(modifier = Modifier.width(44.dp))
+            }
+
+            Surface(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(140.dp),
+                shape = RoundedCornerShape(18.dp),
+                border = BorderStroke(2.dp, MindFlowColors.Surface),
+                color = MindFlowColors.Surface
+            ) {
+                Image(
+                    painter = painterResource(id = R.drawable.mood_journey_flip),
+                    contentDescription = null,
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .clip(RoundedCornerShape(18.dp)),
+                    contentScale = ContentScale.FillWidth
+                )
             }
         }
 
-        // PNG preview panel (same size + radius as before), rotated horizontally by cropping
-        Surface(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(140.dp),
-            shape = RoundedCornerShape(18.dp),
-            border = BorderStroke(2.dp, MindFlowColors.Surface),
-            color = MindFlowColors.Surface // fallback behind image
-        ) {
-            Image(
-                painter = painterResource(id = R.drawable.mood_journey_flip),
-                contentDescription = null,
+        // FRONT LAYER (Emoji click)
+        if (moodEmoji != null) {
+            Box(
                 modifier = Modifier
-                    .fillMaxSize()
-                    .clip(RoundedCornerShape(18.dp)),
-                contentScale = ContentScale.FillWidth
-            )
+                    .align(Alignment.TopEnd)
+                    .padding(top = 10.dp, end = 12.dp)
+                    .size(44.dp)          // large hit target
+                    .zIndex(10f)          // ensure it's above the card clickable
+                    .clickable { onEditMood() },
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = moodEmoji,
+                    style = MaterialTheme.typography.titleLarge
+                )
+            }
         }
     }
 }
 
-/* --- rest of your file stays the same (TodayTasksCard, DailyNoteToSelfCard, BreathingCard) --- */
+/* --- rest unchanged --- */
 
 @Composable
 private fun TodayTasksCard(
@@ -234,7 +254,6 @@ private fun TodayTasksCard(
                     }
                 }
             }
-
         }
 
         Row(
@@ -253,10 +272,7 @@ private fun TodayTasksCard(
                     )
                     Spacer(Modifier.width(4.dp))
                     Icon(
-                        imageVector = if (expanded)
-                            Icons.Default.KeyboardArrowUp
-                        else
-                            Icons.Default.KeyboardArrowDown,
+                        imageVector = if (expanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
                         contentDescription = null,
                         tint = MindFlowColors.TextMuted
                     )

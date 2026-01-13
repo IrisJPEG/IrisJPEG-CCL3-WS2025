@@ -69,7 +69,10 @@ fun NavGraph(
             val exercise = breathingExercises.find { it.id == exerciseId }
 
             if (exercise != null) {
-                BreathingScreen(exercise = exercise)
+                BreathingScreen(
+                    exercise = exercise,
+                    navController = navController // <- pass this!
+                )
             } else {
                 Text("Breathing exercise not found")
             }

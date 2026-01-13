@@ -6,87 +6,141 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
+import com.example.ccl3_ws2025_mindflow.ui.theme.MindFlowColors
+import kotlinx.coroutines.delay
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun BreathingScreen(exercise: BreathingExercise) {
+fun BreathingScreen(
+    exercise: BreathingExercise,
+    navController: NavController
+) {
 
-    val scale = remember { Animatable(0.3f) }
+    val circleScale = remember { Animatable(0.6f) } // circle scale
+    var helperText by remember { mutableStateOf("Breathe in") }
+
+    val maxScale = 1f
+    val minScale = 0.6f
 
     LaunchedEffect(exercise.id) {
-        scale.snapTo(0.3f)
+        circleScale.snapTo(minScale)
 
         while (true) {
-            scale.animateTo(
-                targetValue = 1f,
-                animationSpec = tween(
-                    durationMillis = exercise.breathInDuration * 1000,
-                    easing = LinearEasing
-                )
+            // --- Inhale ---
+            helperText = "Breathe in"
+            circleScale.animateTo(
+                targetValue = maxScale,
+                animationSpec = tween(durationMillis = exercise.breathInDuration * 1000, easing = LinearEasing)
             )
-            scale.animateTo(
-                targetValue = 0.3f,
-                animationSpec = tween(
-                    durationMillis = exercise.breathOutDuration * 1000,
-                    easing = LinearEasing
-                )
+
+            // --- Hold ---
+            if (exercise.holdDuration > 0) {
+                helperText = "Hold"
+                circleScale.snapTo(maxScale)
+                delay(exercise.holdDuration * 1000L)
+            }
+
+            // --- Exhale ---
+            helperText = "Breathe out"
+            circleScale.animateTo(
+                targetValue = minScale,
+                animationSpec = tween(durationMillis = exercise.breathOutDuration * 1000, easing = LinearEasing)
             )
         }
     }
 
+    // --- UI ---
     Box(
-        modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
+        modifier = Modifier
+            .fillMaxSize()
+            .background(
+                Brush.linearGradient(
+                    colors = listOf(
+                        MindFlowColors.BgTop,
+                        MindFlowColors.BgMid,
+                        MindFlowColors.BgBottom
+                    )
+                )
+            )
     ) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        // --- Top App Bar with back arrow ---
+        CenterAlignedTopAppBar(
+            title = { Text(exercise.name, style = MaterialTheme.typography.titleLarge ) },
+            navigationIcon = {
+                IconButton(onClick = { navController.popBackStack() }) {
+                    Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+                }
+            },
+            colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                containerColor = Color.Transparent
+            ),
+            modifier = Modifier.fillMaxWidth()
+        )
 
-            Text(text = exercise.name, style = MaterialTheme.typography.titleLarge)
+        // --- Centered breathing content ---
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier.align(Alignment.Center)
+        ) {
             Spacer(Modifier.height(8.dp))
-            Text(text = exercise.instructions, style = MaterialTheme.typography.bodyMedium)
 
-            Spacer(Modifier.height(32.dp))
+            // --- Helper Text Above Circles ---
+            Text(
+                text = helperText,
+                style = MaterialTheme.typography.titleMedium,
+                color = Color.White,
+                modifier = Modifier.graphicsLayer {
+                    // Scale text slightly with the circle
+                    val extraScale = 0.2f
+                    val scale = 1f + (circleScale.value - minScale) / (maxScale - minScale) * extraScale
+                    scaleX = scale
+                    scaleY = scale
 
-            // Parent container that scales
+                    // Fade text with the circle
+                    alpha = 0.7f + (circleScale.value - minScale) / (maxScale - minScale) * 0.3f
+                }
+            )
+            Spacer(Modifier.height(16.dp))
+
+            // --- Breathing Circles ---
             Box(
                 modifier = Modifier
-                    .size(180.dp)
+                    .size(200.dp)
                     .graphicsLayer {
-                        scaleX = scale.value
-                        scaleY = scale.value
+                        scaleX = circleScale.value
+                        scaleY = circleScale.value
                     },
                 contentAlignment = Alignment.Center
             ) {
-
-                // Biggest circle (outer)
                 Box(
                     modifier = Modifier
-                        .size(180.dp)
+                        .size(200.dp)
                         .clip(CircleShape)
-                        .background(Color(0xFF2C9AB7).copy(alpha = 0.35f))
+                        .background(Color.White.copy(alpha = 0.3f))
                 )
-
-                // Middle circle
                 Box(
                     modifier = Modifier
-                        .size(130.dp)
+                        .size(150.dp)
                         .clip(CircleShape)
-                        .background(Color(0xFF4CB8C4).copy(alpha = 0.45f))
+                        .background(Color.White.copy(alpha = 0.45f))
                 )
-
-                // Smallest circle (inner)
                 Box(
                     modifier = Modifier
-                        .size(80.dp)
+                        .size(100.dp)
                         .clip(CircleShape)
-                        .background(Color(0xFF8EDAE0).copy(alpha = 0.6f))
+                        .background(Color.White.copy(alpha = 0.6f))
                 )
             }
         }

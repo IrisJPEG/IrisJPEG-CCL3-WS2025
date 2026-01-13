@@ -8,6 +8,11 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.outlined.SentimentDissatisfied
+import androidx.compose.material.icons.outlined.SentimentNeutral
+import androidx.compose.material.icons.outlined.SentimentSatisfied
+import androidx.compose.material.icons.outlined.SentimentVeryDissatisfied
+import androidx.compose.material.icons.outlined.SentimentVerySatisfied
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -17,12 +22,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import androidx.navigation.NavController
 import com.example.ccl3_ws2025_mindflow.R
@@ -96,14 +100,11 @@ fun MoodJourneyScreen(
                             modifier = Modifier.offset(x = offsetX),
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
-                            EmojiNode(
-                                emoji = day.mood.emoji,
-                                mood = day.mood
-                            )
+                            MoodNode(mood = day.mood)
 
                             Spacer(modifier = Modifier.height(6.dp))
 
-                            // tiny date under emoji
+                            // tiny date under icon
                             Text(
                                 text = formattedDate,
                                 style = MaterialTheme.typography.labelSmall,
@@ -136,10 +137,7 @@ fun MoodJourneyScreen(
 }
 
 @Composable
-private fun EmojiNode(
-    emoji: String,
-    mood: MoodType
-) {
+private fun MoodNode(mood: MoodType) {
     val circleSize = when (mood) {
         MoodType.VERY_SAD -> 52.dp
         MoodType.SAD -> 56.dp
@@ -148,12 +146,12 @@ private fun EmojiNode(
         MoodType.VERY_HAPPY -> 70.dp
     }
 
-    val emojiSize = when (mood) {
-        MoodType.VERY_SAD -> 22.sp
-        MoodType.SAD -> 24.sp
-        MoodType.NEUTRAL -> 26.sp
-        MoodType.HAPPY -> 30.sp
-        MoodType.VERY_HAPPY -> 34.sp
+    val iconSize = when (mood) {
+        MoodType.VERY_SAD -> 28.dp
+        MoodType.SAD -> 30.dp
+        MoodType.NEUTRAL -> 32.dp
+        MoodType.HAPPY -> 36.dp
+        MoodType.VERY_HAPPY -> 40.dp
     }
 
     Surface(
@@ -168,11 +166,22 @@ private fun EmojiNode(
             modifier = Modifier.fillMaxSize(),
             contentAlignment = Alignment.Center
         ) {
-            Text(
-                text = emoji,
-                style = TextStyle(fontSize = emojiSize),
-                color = MindFlowColors.TextPrimary
+            Icon(
+                imageVector = moodToIcon(mood),
+                contentDescription = null,
+                tint = MindFlowColors.TextPrimary,
+                modifier = Modifier.size(iconSize)
             )
         }
+    }
+}
+
+private fun moodToIcon(mood: MoodType): ImageVector {
+    return when (mood) {
+        MoodType.VERY_SAD -> Icons.Outlined.SentimentVeryDissatisfied
+        MoodType.SAD -> Icons.Outlined.SentimentDissatisfied
+        MoodType.NEUTRAL -> Icons.Outlined.SentimentNeutral
+        MoodType.HAPPY -> Icons.Outlined.SentimentSatisfied
+        MoodType.VERY_HAPPY -> Icons.Outlined.SentimentVerySatisfied
     }
 }

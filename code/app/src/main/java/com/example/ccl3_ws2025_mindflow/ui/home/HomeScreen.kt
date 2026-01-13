@@ -36,6 +36,10 @@ fun HomeScreen(
     navController: NavController,
     viewModel: HomeViewModel
 ) {
+    LaunchedEffect(Unit) {
+        viewModel.refreshDate()
+    }
+
     val state by viewModel.uiState.collectAsState()
     var tasksExpanded by rememberSaveable { mutableStateOf(false) }
 

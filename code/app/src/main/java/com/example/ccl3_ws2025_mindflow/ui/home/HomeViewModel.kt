@@ -19,6 +19,7 @@ import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
+
 data class HomeUiState(
     val todayMood: MoodType? = null,
     val showMoodOverlay: Boolean = false,
@@ -55,35 +56,72 @@ class HomeViewModel(
 
     private val formatter = DateTimeFormatter.ISO_LOCAL_DATE
 
-    private fun todayKey(): String = LocalDate.now().format(formatter)
-    private fun yesterdayKey(): String = LocalDate.now().minusDays(1).format(formatter)
-    private fun tomorrowKey(): String = LocalDate.now().plusDays(1).format(formatter)
-    private fun todayWeekday(): Int = LocalDate.now().dayOfWeek.value // Mon=1..Sun=7
+    // IMPORTANT: date changes must be modeled as state, not as "LocalDate.now()" calls at init time.
+    private val _currentDate = MutableStateFlow(LocalDate.now())
 
+    // Draft state (screen-local, not persisted)
     private val _tomorrowDraft = MutableStateFlow("")
     private val _tomorrowDraftTouched = MutableStateFlow(false)
+
+    // Mood overlay "dismissed" state
     private val _overlayDismissedManually = MutableStateFlow(false)
 
-    // Emits every time today's completion state changes (because query joins task_completions)
-    private val todayRowsFlow = taskRepo.observeTodayTasks(
-        dateKey = todayKey(),
-        weekday = todayWeekday()
-    )
+    /**
+     * Call this whenever the Home screen becomes visible (or on resume).
+     * If the date changed while the app was in memory, this will rebuild all flows.
+     */
+    fun refreshDate() {
+        val now = LocalDate.now()
+        if (_currentDate.value != now) {
+            _currentDate.value = now
 
-    // Recompute streak whenever today's rows change
-    private val streakFlow = todayRowsFlow.flatMapLatest {
-        flow { emit(taskRepo.getDailyAllTaskStreak(todayKey())) }
+            // Optional: reset overlay dismissal so mood prompt can show again on a new day
+            _overlayDismissedManually.value = false
+
+            // Optional: clear draft-touch flag so we can prefill tomorrow draft from DB for the new date
+            _tomorrowDraftTouched.value = false
+            _tomorrowDraft.value = ""
+        }
     }
 
-    // --- Build partial state using ONLY 2-flow combine() to avoid overload issues ---
+    private fun dateKey(date: LocalDate): String = date.format(formatter)
 
-    private val moodFlow = moodRepo.observeMoodForDate(todayKey())
-    private val yNoteFlow = noteRepo.observeNoteForDate(yesterdayKey())
-    private val tNoteFlow = noteRepo.observeNoteForDate(tomorrowKey())
+    private fun todayKey(date: LocalDate): String = dateKey(date)
+    private fun yesterdayKey(date: LocalDate): String = dateKey(date.minusDays(1))
+    private fun tomorrowKey(date: LocalDate): String = dateKey(date.plusDays(1))
+    private fun weekday(date: LocalDate): Int = date.dayOfWeek.value // Mon=1..Sun=7
 
-    private val notesFlow = combine(yNoteFlow, tNoteFlow) { y, t ->
-        y to t
+    // --- Date-dependent flows (REBUILT when _currentDate changes) ---
+
+    private val todayRowsFlow = _currentDate.flatMapLatest { date ->
+        taskRepo.observeTodayTasks(
+            dateKey = todayKey(date),
+            weekday = weekday(date)
+        )
     }
+
+    private val streakFlow = _currentDate.flatMapLatest { date ->
+        // Recompute streak (and also re-run whenever today's rows change)
+        todayRowsFlow.flatMapLatest {
+            flow { emit(taskRepo.getDailyAllTaskStreak(todayKey(date))) }
+        }
+    }
+
+    private val moodFlow = _currentDate.flatMapLatest { date ->
+        moodRepo.observeMoodForDate(todayKey(date))
+    }
+
+    private val yNoteFlow = _currentDate.flatMapLatest { date ->
+        noteRepo.observeNoteForDate(yesterdayKey(date))
+    }
+
+    private val tNoteFlow = _currentDate.flatMapLatest { date ->
+        noteRepo.observeNoteForDate(tomorrowKey(date))
+    }
+
+    // --- Combine into partial state (keep your 2-flow combine chaining) ---
+
+    private val notesFlow = combine(yNoteFlow, tNoteFlow) { y, t -> y to t }
 
     private val draftFlow = combine(_tomorrowDraft, _tomorrowDraftTouched) { draft, touched ->
         draft to touched
@@ -95,7 +133,6 @@ class HomeViewModel(
 
     private val moodNotesRowsFlow = combine(moodNotesFlow, todayRowsFlow) { mn, rows ->
         Triple(mn.first, mn.second, rows)
-        // Triple<MoodType?, Pair<NoteEntity?, NoteEntity?>, List<TodayTaskRow>>
     }
 
     private val partial: StateFlow<HomePartial> = combine(moodNotesRowsFlow, draftFlow) { triple, draftPair ->
@@ -112,9 +149,13 @@ class HomeViewModel(
             draft = draftPair.first,
             draftTouched = draftPair.second
         )
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), HomePartial(null, null, null, emptyList(), "", false))
+    }.stateIn(
+        viewModelScope,
+        SharingStarted.WhileSubscribed(5_000),
+        HomePartial(null, null, null, emptyList(), "", false)
+    )
 
-    // --- Final UI state, again using 2-flow combine chaining ---
+    // --- Final UI state ---
 
     private val partialOverlayFlow = combine(partial, _overlayDismissedManually) { p, overlayDismissed ->
         p to overlayDismissed
@@ -158,17 +199,25 @@ class HomeViewModel(
     }
 
     fun saveTomorrowNote() {
-        val dateKey = tomorrowKey()
         val text = _tomorrowDraft.value
+
         viewModelScope.launch {
-            noteRepo.saveNote(dateKey, text)
+            // Use currentDate at save-time (not captured at init)
+            val date = _currentDate.value
+            val key = tomorrowKey(date)
+
+            noteRepo.saveNote(key, text)
+
+            // After saving, allow future auto-prefill to come from DB again
             _tomorrowDraftTouched.value = false
         }
     }
 
     fun selectMood(mood: MoodType) {
-        val key = todayKey()
-        viewModelScope.launch { moodRepo.saveMood(key, mood) }
+        viewModelScope.launch {
+            val key = todayKey(_currentDate.value)
+            moodRepo.saveMood(key, mood)
+        }
     }
 
     fun dismissOverlayOnce() {
@@ -176,8 +225,8 @@ class HomeViewModel(
     }
 
     fun toggleTaskDone(taskId: Long) {
-        val dateKey = todayKey()
         viewModelScope.launch {
+            val dateKey = todayKey(_currentDate.value)
             taskRepo.toggleCompletion(taskId = taskId, dateKey = dateKey)
         }
     }

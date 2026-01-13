@@ -105,17 +105,21 @@ fun PillRowSurface(
     content: @Composable RowScope.() -> Unit
 ) {
     Surface(
-        modifier = modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(Dimens.PillRadius)),
+        modifier = modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(Dimens.PillRadius),
         color = MindFlowColors.SurfaceAlt,
-        border = BorderStroke(1.dp, MindFlowColors.Stroke)
+        border = BorderStroke(1.dp, MindFlowColors.Stroke),
+        tonalElevation = 0.dp,
+        shadowElevation = 0.dp
     ) {
         Row(
-            modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
+            modifier = Modifier
+                // padding happens INSIDE the border → clean corners
+                .padding(horizontal = 14.dp, vertical = 10.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(10.dp),
             content = content
         )
     }
 }
+

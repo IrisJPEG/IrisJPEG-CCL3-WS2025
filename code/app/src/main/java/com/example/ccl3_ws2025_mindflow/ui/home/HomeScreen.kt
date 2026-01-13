@@ -2,9 +2,11 @@ package com.example.ccl3_ws2025_mindflow.ui.home
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -27,9 +29,9 @@ import androidx.compose.ui.zIndex
 import androidx.navigation.NavController
 import com.example.ccl3_ws2025_mindflow.R
 import com.example.ccl3_ws2025_mindflow.data.tasks.TodayTaskRow
+import com.example.ccl3_ws2025_mindflow.ui.breathing.BreathingExercise
+import com.example.ccl3_ws2025_mindflow.ui.breathing.breathingExercises
 import com.example.ccl3_ws2025_mindflow.ui.theme.*
-import androidx.compose.foundation.background
-import androidx.compose.foundation.shape.CircleShape
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -58,7 +60,6 @@ fun HomeScreen(
                     onEditMood = { viewModel.openMoodPicker() }
                 )
 
-
                 TodayTasksCard(
                     progress = state.progress,
                     streakDays = state.streakDays,
@@ -75,9 +76,8 @@ fun HomeScreen(
                     onLeaveMessageForTomorrow = { navController.navigate("noteToSelf") }
                 )
 
-                BreathingCard(
-                    onClick = { navController.navigate("meditation") }
-                )
+                // NEW breathing dropdown + route with exerciseId
+                BreathingCard(navController = navController)
 
                 Spacer(modifier = Modifier.height(6.dp))
             }
@@ -92,8 +92,6 @@ fun HomeScreen(
     }
 }
 
-
-
 @Composable
 private fun MoodJourneyHeader(
     moodEmoji: String?,
@@ -102,7 +100,7 @@ private fun MoodJourneyHeader(
 ) {
     Box(modifier = Modifier.fillMaxWidth()) {
 
-        // BACK: whole card opens journey
+        // Whole card opens journey
         MindFlowCard(
             modifier = Modifier
                 .fillMaxWidth()
@@ -140,32 +138,24 @@ private fun MoodJourneyHeader(
             }
         }
 
-        // FRONT: BIG emoji hitbox (easy to tap)
+        // Emoji hitbox (easy to tap)
         if (moodEmoji != null) {
             Box(
                 modifier = Modifier
                     .align(Alignment.TopEnd)
-                    // keep it comfortably inside the card
                     .padding(top = 8.dp, end = 8.dp)
-                    .size(56.dp)                // <- BIG tap target
-                    .zIndex(999f)               // <- ALWAYS above
+                    .size(56.dp)
+                    .zIndex(999f)
                     .clip(CircleShape)
-                    // optional: tiny subtle background to help tapping (can remove if you want invisible)
                     .background(MindFlowColors.Surface.copy(alpha = 0.01f))
                     .clickable { onEditMood() },
                 contentAlignment = Alignment.Center
             ) {
-                Text(
-                    text = moodEmoji,
-                    style = MaterialTheme.typography.titleLarge
-                )
+                Text(text = moodEmoji, style = MaterialTheme.typography.titleLarge)
             }
         }
     }
 }
-
-
-/* --- rest unchanged --- */
 
 @Composable
 private fun TodayTasksCard(
@@ -180,6 +170,7 @@ private fun TodayTasksCard(
 ) {
     val collapsedCount = 2
     val canExpand = rows.size > collapsedCount
+
     MindFlowCard(modifier = Modifier.fillMaxWidth()) {
 
         Row(
@@ -233,7 +224,7 @@ private fun TodayTasksCard(
                 color = MindFlowColors.TextMuted
             )
         } else {
-            val shown = if (expanded) rows else rows.take(2)
+            val shown = if (expanded) rows else rows.take(collapsedCount)
 
             Column(
                 modifier = Modifier.fillMaxWidth(),
@@ -320,21 +311,73 @@ private fun DailyNoteToSelfCard(
 }
 
 @Composable
-private fun BreathingCard(onClick: () -> Unit) {
+private fun BreathingCard(navController: NavController) {
+    var expanded by remember { mutableStateOf(false) }
+    var selectedExercise by remember { mutableStateOf<BreathingExercise?>(null) }
+
     MindFlowCard(modifier = Modifier.fillMaxWidth()) {
         Text("Take a moment to relax", style = MaterialTheme.typography.titleLarge)
 
-        PillRowSurface {
-            Text(
-                "Choose breathing exercise",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MindFlowColors.TextMuted,
-                modifier = Modifier.weight(1f)
-            )
-            Icon(Icons.Default.KeyboardArrowDown, contentDescription = null, tint = MindFlowColors.TextMuted)
-            Spacer(Modifier.width(8.dp))
-            IconButton(onClick = onClick) {
-                Icon(Icons.Default.PlayArrow, contentDescription = "Start", tint = MindFlowColors.Primary)
+        Column {
+            // Tapping the pill toggles dropdown
+            PillRowSurface(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { expanded = !expanded }
+            ) {
+                Text(
+                    text = selectedExercise?.name ?: "Choose breathing exercise",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MindFlowColors.TextMuted,
+                    modifier = Modifier.weight(1f)
+                )
+
+                Icon(
+                    imageVector = if (expanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
+                    contentDescription = null,
+                    tint = MindFlowColors.TextMuted
+                )
+
+                Spacer(Modifier.width(8.dp))
+
+                IconButton(
+                    onClick = {
+                        selectedExercise?.let { ex ->
+                            navController.navigate("breathing/${ex.id}")
+                        }
+                    },
+                    enabled = selectedExercise != null
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.PlayArrow,
+                        contentDescription = "Start",
+                        tint = if (selectedExercise != null) MindFlowColors.Primary else MindFlowColors.TextMuted
+                    )
+                }
+            }
+
+            // Dropdown list
+            if (expanded) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 8.dp)
+                ) {
+                    breathingExercises.forEach { exercise ->
+                        Text(
+                            text = exercise.name,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MindFlowColors.TextSecondary,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable {
+                                    selectedExercise = exercise
+                                    expanded = false
+                                }
+                                .padding(vertical = 10.dp, horizontal = 12.dp)
+                        )
+                    }
+                }
             }
         }
     }

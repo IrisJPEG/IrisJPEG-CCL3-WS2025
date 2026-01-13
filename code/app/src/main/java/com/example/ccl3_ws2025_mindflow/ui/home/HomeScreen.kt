@@ -26,6 +26,9 @@ import androidx.navigation.NavController
 import com.example.ccl3_ws2025_mindflow.R
 import com.example.ccl3_ws2025_mindflow.data.tasks.TodayTaskRow
 import com.example.ccl3_ws2025_mindflow.ui.theme.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.filled.KeyboardArrowUp
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -36,48 +39,55 @@ fun HomeScreen(
     val state by viewModel.uiState.collectAsState()
     var tasksExpanded by rememberSaveable { mutableStateOf(false) }
 
-    MindFlowBackground {
-        Box(modifier = Modifier.padding(Dimens.ScreenPadding)) {
-            Column(verticalArrangement = Arrangement.spacedBy(Dimens.CardGap)) {
+            MindFlowBackground {
+                Box(modifier = Modifier.padding(Dimens.ScreenPadding)) {
 
-                MoodJourneyHeader(
-                    moodEmoji = state.todayMood?.emoji,
-                    onClick = { navController.navigate("moodJourney") }
-                )
+                    Column(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .verticalScroll(rememberScrollState()),
+                        verticalArrangement = Arrangement.spacedBy(Dimens.CardGap)
+                    ) {
 
-                TodayTasksCard(
-                    progress = state.progress,
-                    streakDays = state.streakDays,
-                    rows = state.todayTasks,
-                    expanded = tasksExpanded,
-                    onToggleDone = { taskId -> viewModel.toggleTaskDone(taskId) },
-                    onToggleExpand = { tasksExpanded = !tasksExpanded },
-                    onManage = { navController.navigate("tasks") },
-                    onHistory = { navController.navigate("history") }
-                )
+                        MoodJourneyHeader(
+                            moodEmoji = state.todayMood?.emoji,
+                            onClick = { navController.navigate("moodJourney") }
+                        )
 
-                DailyNoteToSelfCard(
-                    yesterdayNote = state.yesterdayNote,
-                    onLeaveMessageForTomorrow = {
-                        navController.navigate("noteToSelf")
+                        TodayTasksCard(
+                            progress = state.progress,
+                            streakDays = state.streakDays,
+                            rows = state.todayTasks,
+                            expanded = tasksExpanded,
+                            onToggleDone = { taskId -> viewModel.toggleTaskDone(taskId) },
+                            onToggleExpand = { tasksExpanded = !tasksExpanded },
+                            onManage = { navController.navigate("tasks") },
+                            onHistory = { navController.navigate("history") }
+                        )
+
+                        DailyNoteToSelfCard(
+                            yesterdayNote = state.yesterdayNote,
+                            onLeaveMessageForTomorrow = {
+                                navController.navigate("noteToSelf")
+                            }
+                        )
+
+                        BreathingCard(
+                            onClick = { navController.navigate("meditation") }
+                        )
+
+                        Spacer(modifier = Modifier.height(6.dp))
                     }
-                )
 
-                BreathingCard(
-                    onClick = { navController.navigate("meditation") }
-                )
-
-                Spacer(modifier = Modifier.height(6.dp))
+                    if (state.showMoodOverlay) {
+                        MoodOverlay(
+                            onSelect = { mood -> viewModel.selectMood(mood) },
+                            onDismissOnce = { viewModel.dismissOverlayOnce() }
+                        )
+                    }
+                }
             }
 
-            if (state.showMoodOverlay) {
-                MoodOverlay(
-                    onSelect = { mood -> viewModel.selectMood(mood) },
-                    onDismissOnce = { viewModel.dismissOverlayOnce() }
-                )
-            }
-        }
-    }
 }
 
 @Composable
@@ -138,6 +148,8 @@ private fun TodayTasksCard(
     onManage: () -> Unit,
     onHistory: () -> Unit
 ) {
+    val collapsedCount = 2
+    val canExpand = rows.size > collapsedCount
     MindFlowCard(modifier = Modifier.fillMaxWidth()) {
 
         Row(
@@ -193,11 +205,11 @@ private fun TodayTasksCard(
         } else {
             val shown = if (expanded) rows else rows.take(2)
 
-            LazyColumn(
+            Column(
                 modifier = Modifier.fillMaxWidth(),
                 verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
-                items(shown, key = { it.task.id }) { row ->
+                shown.forEach { row ->
                     PillRowSurface {
                         Checkbox(
                             checked = row.isCompleted,
@@ -218,6 +230,7 @@ private fun TodayTasksCard(
                     }
                 }
             }
+
         }
 
         Row(
@@ -225,11 +238,24 @@ private fun TodayTasksCard(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            TextButton(onClick = onToggleExpand, enabled = rows.size > 3) {
+            TextButton(
+                onClick = onToggleExpand,
+                enabled = canExpand
+            ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text("Expand", color = MindFlowColors.TextMuted)
+                    Text(
+                        text = if (expanded) "Collapse" else "Expand",
+                        color = MindFlowColors.TextMuted
+                    )
                     Spacer(Modifier.width(4.dp))
-                    Icon(Icons.Default.KeyboardArrowDown, contentDescription = null, tint = MindFlowColors.TextMuted)
+                    Icon(
+                        imageVector = if (expanded)
+                            Icons.Default.KeyboardArrowUp
+                        else
+                            Icons.Default.KeyboardArrowDown,
+                        contentDescription = null,
+                        tint = MindFlowColors.TextMuted
+                    )
                 }
             }
             TextButton(onClick = onManage) {

@@ -1,11 +1,15 @@
 package com.example.ccl3_ws2025_mindflow.ui.navigation
 
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
+import com.example.ccl3_ws2025_mindflow.ui.breathing.BreathingExercise
+import com.example.ccl3_ws2025_mindflow.ui.breathing.BreathingScreen
+import com.example.ccl3_ws2025_mindflow.ui.breathing.breathingExercises
 import com.example.ccl3_ws2025_mindflow.ui.history.HistoryScreen
 import com.example.ccl3_ws2025_mindflow.ui.history.HistoryViewModel
 import com.example.ccl3_ws2025_mindflow.ui.home.HomeScreen
@@ -55,5 +59,21 @@ fun NavGraph(
         composable("moodJourney") {
             MoodJourneyScreen(navController = navController, viewModel = moodJourneyViewModel)
         }
+
+        composable(
+            route = "breathing/{exerciseId}",
+            arguments = listOf(navArgument("exerciseId") { type = NavType.StringType })
+        ) { backStack ->
+            val exerciseId = backStack.arguments?.getString("exerciseId")
+
+            val exercise = breathingExercises.find { it.id == exerciseId }
+
+            if (exercise != null) {
+                BreathingScreen(exercise = exercise)
+            } else {
+                Text("Breathing exercise not found")
+            }
+        }
+
     }
 }

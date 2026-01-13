@@ -166,22 +166,28 @@ private fun MoodJourneyHeader(
                 .clickable { onEditMood() },
             contentAlignment = Alignment.Center
         ) {
-            if (mood != null) {
+            val showPlaceholder = (mood == null)
+
+            if (showPlaceholder) {
+                Image(
+                    painter = painterResource(id = R.drawable.circle_dashed),
+                    contentDescription = "Set mood",
+                    modifier = Modifier
+                        .size(34.dp)
+                        .offset(y = (-6).dp)
+                )
+            } else {
                 Icon(
                     imageVector = moodToIcon(mood),
                     contentDescription = "Edit mood",
                     tint = MindFlowColors.TextPrimary,
-                    modifier = Modifier.size(34.dp)
-                        .offset(y = (-6).dp)                )
-            } else {
-                // If there's no mood yet, still show a "neutral" icon so user can tap it
-                Icon(
-                    imageVector = Icons.Outlined.SentimentNeutral,
-                    contentDescription = "Set mood",
-                    tint = MindFlowColors.TextPrimary,
-                    modifier = Modifier.size(34.dp)
+                    modifier = Modifier
+                        .size(34.dp)
+                        .offset(y = (-6).dp)
                 )
             }
+
+
         }
     }
 }

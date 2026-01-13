@@ -19,6 +19,12 @@ class MoodJourneyViewModel(
 
     val uiState: StateFlow<MoodJourneyUiState> =
         moodRepo.observeAllMoods()
-            .map { list -> MoodJourneyUiState(days = list) }
-            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), MoodJourneyUiState())
+            .map { list ->
+                MoodJourneyUiState(days = list)
+            }
+            .stateIn(
+                viewModelScope,
+                SharingStarted.WhileSubscribed(5_000),
+                MoodJourneyUiState()
+            )
 }

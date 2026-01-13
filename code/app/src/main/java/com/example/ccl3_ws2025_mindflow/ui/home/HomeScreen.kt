@@ -28,6 +28,8 @@ import androidx.navigation.NavController
 import com.example.ccl3_ws2025_mindflow.R
 import com.example.ccl3_ws2025_mindflow.data.tasks.TodayTaskRow
 import com.example.ccl3_ws2025_mindflow.ui.theme.*
+import androidx.compose.foundation.background
+import androidx.compose.foundation.shape.CircleShape
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -55,6 +57,7 @@ fun HomeScreen(
                     onOpenJourney = { navController.navigate("moodJourney") },
                     onEditMood = { viewModel.openMoodPicker() }
                 )
+
 
                 TodayTasksCard(
                     progress = state.progress,
@@ -89,18 +92,17 @@ fun HomeScreen(
     }
 }
 
+
+
 @Composable
 private fun MoodJourneyHeader(
     moodEmoji: String?,
     onOpenJourney: () -> Unit,
     onEditMood: () -> Unit
 ) {
-    // IMPORTANT STRUCTURE:
-    // - Back layer: whole card is clickable to open journey
-    // - Front layer: emoji box sits on top (zIndex) and is clickable to edit mood
     Box(modifier = Modifier.fillMaxWidth()) {
 
-        // BACK LAYER (Journey click)
+        // BACK: whole card opens journey
         MindFlowCard(
             modifier = Modifier
                 .fillMaxWidth()
@@ -115,9 +117,8 @@ private fun MoodJourneyHeader(
                     style = MaterialTheme.typography.titleLarge,
                     modifier = Modifier.weight(1f)
                 )
-
-                // leave space so emoji overlay doesn't feel cramped
-                Spacer(modifier = Modifier.width(44.dp))
+                // Reserve space so emoji overlay does not overlap text
+                Spacer(modifier = Modifier.width(56.dp))
             }
 
             Surface(
@@ -139,14 +140,18 @@ private fun MoodJourneyHeader(
             }
         }
 
-        // FRONT LAYER (Emoji click)
+        // FRONT: BIG emoji hitbox (easy to tap)
         if (moodEmoji != null) {
             Box(
                 modifier = Modifier
                     .align(Alignment.TopEnd)
-                    .padding(top = 10.dp, end = 12.dp)
-                    .size(44.dp)          // large hit target
-                    .zIndex(10f)          // ensure it's above the card clickable
+                    // keep it comfortably inside the card
+                    .padding(top = 8.dp, end = 8.dp)
+                    .size(56.dp)                // <- BIG tap target
+                    .zIndex(999f)               // <- ALWAYS above
+                    .clip(CircleShape)
+                    // optional: tiny subtle background to help tapping (can remove if you want invisible)
+                    .background(MindFlowColors.Surface.copy(alpha = 0.01f))
                     .clickable { onEditMood() },
                 contentAlignment = Alignment.Center
             ) {
@@ -158,6 +163,7 @@ private fun MoodJourneyHeader(
         }
     }
 }
+
 
 /* --- rest unchanged --- */
 

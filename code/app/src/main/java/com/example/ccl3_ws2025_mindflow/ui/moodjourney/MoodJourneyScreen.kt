@@ -12,6 +12,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
@@ -28,6 +29,9 @@ import com.example.ccl3_ws2025_mindflow.R
 import com.example.ccl3_ws2025_mindflow.data.mood.MoodType
 import com.example.ccl3_ws2025_mindflow.ui.theme.Dimens
 import com.example.ccl3_ws2025_mindflow.ui.theme.MindFlowColors
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
+import java.util.Locale
 
 @Composable
 fun MoodJourneyScreen(
@@ -36,9 +40,16 @@ fun MoodJourneyScreen(
 ) {
     val state by viewModel.uiState.collectAsState()
 
+    // incoming dateKey = yyyy-MM-dd
+    val inFormatter = remember { DateTimeFormatter.ISO_LOCAL_DATE }
+    // small, friendly display
+    val outFormatter = remember {
+        DateTimeFormatter.ofPattern("dd MMM", Locale.getDefault())
+    }
+
     Box(modifier = Modifier.fillMaxSize()) {
 
-        // PNG background
+        // Background image
         Image(
             painter = painterResource(id = R.drawable.mood_journey_bg),
             contentDescription = null,
@@ -68,16 +79,36 @@ fun MoodJourneyScreen(
                 }
             } else {
                 itemsIndexed(state.days) { index, day ->
+
+                    // zig-zag positioning
                     val offsetX = if (index % 2 == 0) (-55).dp else 55.dp
+
+                    // format date safely
+                    val formattedDate = runCatching {
+                        LocalDate.parse(day.dateKey, inFormatter).format(outFormatter)
+                    }.getOrElse { day.dateKey }
 
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.Center
                     ) {
-                        Box(modifier = Modifier.offset(x = offsetX)) {
+                        Column(
+                            modifier = Modifier.offset(x = offsetX),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
                             EmojiNode(
                                 emoji = day.mood.emoji,
                                 mood = day.mood
+                            )
+
+                            Spacer(modifier = Modifier.height(6.dp))
+
+                            // tiny date under emoji
+                            Text(
+                                text = formattedDate,
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MindFlowColors.TextMuted,
+                                textAlign = TextAlign.Center
                             )
                         }
                     }
@@ -109,7 +140,6 @@ private fun EmojiNode(
     emoji: String,
     mood: MoodType
 ) {
-    // Circle size (subtle scaling)
     val circleSize = when (mood) {
         MoodType.VERY_SAD -> 52.dp
         MoodType.SAD -> 56.dp
@@ -118,7 +148,6 @@ private fun EmojiNode(
         MoodType.VERY_HAPPY -> 70.dp
     }
 
-    // Emoji font size (kept proportional)
     val emojiSize = when (mood) {
         MoodType.VERY_SAD -> 22.sp
         MoodType.SAD -> 24.sp
@@ -141,9 +170,7 @@ private fun EmojiNode(
         ) {
             Text(
                 text = emoji,
-                style = TextStyle(
-                    fontSize = emojiSize
-                ),
+                style = TextStyle(fontSize = emojiSize),
                 color = MindFlowColors.TextPrimary
             )
         }

@@ -1,6 +1,7 @@
 package com.example.ccl3_ws2025_mindflow.ui.home
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -21,6 +22,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.positionInParent
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
@@ -32,6 +35,7 @@ import com.example.ccl3_ws2025_mindflow.data.tasks.TodayTaskRow
 import com.example.ccl3_ws2025_mindflow.ui.breathing.BreathingExercise
 import com.example.ccl3_ws2025_mindflow.ui.breathing.breathingExercises
 import com.example.ccl3_ws2025_mindflow.ui.theme.*
+import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -44,13 +48,16 @@ fun HomeScreen(
     val state by viewModel.uiState.collectAsState()
     var tasksExpanded by rememberSaveable { mutableStateOf(false) }
 
+    // HOISTED scroll state so BreathingCard can scroll to dropdown when expanded
+    val scrollState = rememberScrollState()
+
     MindFlowBackground {
         Box(modifier = Modifier.padding(Dimens.ScreenPadding)) {
 
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .verticalScroll(rememberScrollState()),
+                    .verticalScroll(scrollState),
                 verticalArrangement = Arrangement.spacedBy(Dimens.CardGap)
             ) {
 
@@ -76,8 +83,11 @@ fun HomeScreen(
                     onLeaveMessageForTomorrow = { navController.navigate("noteToSelf") }
                 )
 
-                // NEW breathing dropdown + route with exerciseId
-                BreathingCard(navController = navController)
+                // NEW breathing dropdown + auto-scroll on expand
+                BreathingCard(
+                    navController = navController,
+                    scrollState = scrollState
+                )
 
                 Spacer(modifier = Modifier.height(6.dp))
             }
@@ -311,9 +321,24 @@ private fun DailyNoteToSelfCard(
 }
 
 @Composable
-private fun BreathingCard(navController: NavController) {
+private fun BreathingCard(
+    navController: NavController,
+    scrollState: ScrollState
+) {
     var expanded by remember { mutableStateOf(false) }
     var selectedExercise by remember { mutableStateOf<BreathingExercise?>(null) }
+
+    // Y position (px) of dropdown within the scrollable Column
+    var dropdownTopPx by remember { mutableStateOf(0) }
+
+    // When opening, scroll to the dropdown so it’s immediately visible
+    LaunchedEffect(expanded) {
+        if (expanded) {
+            // wait a frame so layout is measured and dropdownTopPx is set
+            delay(16)
+            scrollState.animateScrollTo(scrollState.maxValue)
+        }
+    }
 
     MindFlowCard(modifier = Modifier.fillMaxWidth()) {
         Text("Take a moment to relax", style = MaterialTheme.typography.titleLarge)
@@ -362,6 +387,9 @@ private fun BreathingCard(navController: NavController) {
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(top = 8.dp)
+                        .onGloballyPositioned { coords ->
+                            dropdownTopPx = coords.positionInParent().y.toInt()
+                        }
                 ) {
                     breathingExercises.forEach { exercise ->
                         Text(

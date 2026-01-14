@@ -98,8 +98,10 @@ fun HomeScreen(navController: NavController, viewModel: HomeViewModel) {
 
                 DailyNoteToSelfCard(
                     yesterdayNote = state.yesterdayNote,
-                    onLeaveMessageForTomorrow = { navController.navigate("noteToSelf") }
+                    onLeaveMessageForTomorrow = { navController.navigate("noteToSelf") },
+                    onHistory = { navController.navigate("noteHistory") }
                 )
+
 
                 BreathingCard(
                     navController = navController,
@@ -350,10 +352,25 @@ private fun TodayTasksCard(
 @Composable
 private fun DailyNoteToSelfCard(
     yesterdayNote: String?,
-    onLeaveMessageForTomorrow: () -> Unit
+    onLeaveMessageForTomorrow: () -> Unit,
+    onHistory: () -> Unit
 ) {
     MindFlowCard(modifier = Modifier.fillMaxWidth()) {
-        Text("Daily note to self ♡", style = MaterialTheme.typography.titleLarge)
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text("Daily note to self ♡", style = MaterialTheme.typography.titleLarge, modifier = Modifier.weight(1f))
+
+            IconButton(onClick = onHistory) {
+                Icon(
+                    Icons.Default.History,
+                    contentDescription = "Notes history",
+                    tint = MindFlowColors.TextMuted
+                )
+            }
+        }
 
         Text("Yesterday’s note:", style = MaterialTheme.typography.labelLarge)
         Text(
@@ -374,6 +391,7 @@ private fun DailyNoteToSelfCard(
         )
     }
 }
+
 
 @Composable
 private fun BreathingCard(

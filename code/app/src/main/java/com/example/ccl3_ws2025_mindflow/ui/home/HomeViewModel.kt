@@ -102,8 +102,10 @@ class HomeViewModel(
     }
 
     private val tNoteFlow = _currentDate.flatMapLatest { date ->
-        noteRepo.observeNoteForDate(tomorrowKey(date))
+        // this is the note you write TODAY (for “tomorrow you”)
+        noteRepo.observeNoteForDate(todayKey(date))
     }
+
 
     private val notesFlow = combine(yNoteFlow, tNoteFlow) { y, t -> y to t }
 
@@ -187,6 +189,7 @@ class HomeViewModel(
         viewModelScope.launch {
             val date = _currentDate.value
             noteRepo.saveNote(todayKey(date), text)
+
             _tomorrowDraftTouched.value = false
         }
     }

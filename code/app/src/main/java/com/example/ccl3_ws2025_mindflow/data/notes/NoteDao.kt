@@ -20,4 +20,12 @@ interface NoteDao {
 
     @Query("DELETE FROM notes WHERE dateKey = :dateKey")
     suspend fun deleteByDate(dateKey: String)
+
+    @Query("""
+    SELECT * FROM notes 
+    WHERE dateKey BETWEEN :startKey AND :endKey
+    ORDER BY dateKey ASC
+""")
+    fun observeNotesBetween(startKey: String, endKey: String): Flow<List<NoteEntity>>
+
 }

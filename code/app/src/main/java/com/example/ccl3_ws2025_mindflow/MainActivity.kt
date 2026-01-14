@@ -12,7 +12,7 @@ import com.example.ccl3_ws2025_mindflow.ui.home.HomeViewModel
 import com.example.ccl3_ws2025_mindflow.ui.moodjourney.MoodJourneyViewModel
 import com.example.ccl3_ws2025_mindflow.ui.navigation.NavGraph
 import com.example.ccl3_ws2025_mindflow.ui.tasks.TaskViewModel
-import kotlinx.coroutines.launch
+import com.example.ccl3_ws2025_mindflow.ui.history.NoteHistoryViewModel
 
 class MainActivity : ComponentActivity() {
 
@@ -32,6 +32,7 @@ class MainActivity : ComponentActivity() {
         val taskViewModel = TaskViewModel(app.container.taskRepository)
         val historyViewModel = HistoryViewModel(app.container.taskRepository)
         val moodJourneyViewModel = MoodJourneyViewModel(app.container.moodRepository)
+        val noteHistoryViewModel = NoteHistoryViewModel(app.container.noteRepository)
 
         setContent {
             val navController = rememberNavController()
@@ -40,7 +41,9 @@ class MainActivity : ComponentActivity() {
                 homeViewModel = homeViewModel,
                 taskViewModel = taskViewModel,
                 historyViewModel = historyViewModel,
-                moodJourneyViewModel = moodJourneyViewModel
+                moodJourneyViewModel = moodJourneyViewModel,
+                noteHistoryViewModel = noteHistoryViewModel
+
             )
         }
     }

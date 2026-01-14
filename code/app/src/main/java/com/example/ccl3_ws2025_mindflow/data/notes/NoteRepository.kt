@@ -18,4 +18,8 @@ class NoteRepository(private val dao: NoteDao) {
             dao.upsert(NoteEntity(dateKey = dateKey, text = trimmed))
         }
     }
+
+    fun observeNotesBetween(startKey: String, endKey: String): Flow<List<NoteEntity>> =
+        dao.observeNotesBetween(startKey, endKey)
+
 }

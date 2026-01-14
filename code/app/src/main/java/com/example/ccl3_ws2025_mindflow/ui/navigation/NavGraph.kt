@@ -7,7 +7,6 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
-import com.example.ccl3_ws2025_mindflow.ui.breathing.BreathingExercise
 import com.example.ccl3_ws2025_mindflow.ui.breathing.BreathingScreen
 import com.example.ccl3_ws2025_mindflow.ui.breathing.breathingExercises
 import com.example.ccl3_ws2025_mindflow.ui.history.HistoryScreen
@@ -20,6 +19,9 @@ import com.example.ccl3_ws2025_mindflow.ui.tasks.TaskListScreen
 import com.example.ccl3_ws2025_mindflow.ui.tasks.TaskViewModel
 import com.example.ccl3_ws2025_mindflow.ui.moodjourney.MoodJourneyScreen
 import com.example.ccl3_ws2025_mindflow.ui.moodjourney.MoodJourneyViewModel
+import com.example.ccl3_ws2025_mindflow.ui.history.NoteHistoryScreen
+import com.example.ccl3_ws2025_mindflow.ui.history.NoteHistoryViewModel
+
 
 @Composable
 fun NavGraph(
@@ -27,7 +29,8 @@ fun NavGraph(
     homeViewModel: HomeViewModel,
     taskViewModel: TaskViewModel,
     historyViewModel: HistoryViewModel,
-    moodJourneyViewModel: MoodJourneyViewModel
+    moodJourneyViewModel: MoodJourneyViewModel,
+    noteHistoryViewModel: NoteHistoryViewModel
 ) {
     NavHost(navController = navController, startDestination = "home") {
 
@@ -77,6 +80,13 @@ fun NavGraph(
                 Text("Breathing exercise not found")
             }
         }
+        composable("noteHistory") {
+            NoteHistoryScreen(
+                navController = navController,
+                viewModel = noteHistoryViewModel
+            )
+        }
+
 
     }
 }

@@ -166,7 +166,12 @@ fun AddEditTaskScreen(
                         cursorColor = MindFlowColors.TextPrimary
                     )
                 )
-
+                Text(
+                    text = "Repeat weekly",
+                    style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Normal),
+                    color = MindFlowColors.TextMuted, // Light grey color
+                    modifier = Modifier.padding(bottom = 0.dp) // Add space below the label
+                )
                 // --- Weekday container (disabled when repeatOnlyOnce) ---
                 Surface(
                     modifier = Modifier.fillMaxWidth(),
@@ -177,7 +182,7 @@ fun AddEditTaskScreen(
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = 10.dp, vertical = 8.dp),
+                            .padding(horizontal = 10.dp, vertical = 4.dp),
                         horizontalArrangement = Arrangement.spacedBy(6.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {

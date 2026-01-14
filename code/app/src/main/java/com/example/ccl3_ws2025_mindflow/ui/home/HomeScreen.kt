@@ -1,8 +1,8 @@
 package com.example.ccl3_ws2025_mindflow.ui.home
 
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -15,21 +15,12 @@ import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material.icons.outlined.SentimentDissatisfied
-import androidx.compose.material.icons.outlined.SentimentNeutral
-import androidx.compose.material.icons.outlined.SentimentSatisfied
-import androidx.compose.material.icons.outlined.SentimentVeryDissatisfied
-import androidx.compose.material.icons.outlined.SentimentVerySatisfied
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.layout.onGloballyPositioned
-import androidx.compose.ui.layout.positionInParent
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
@@ -37,36 +28,37 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import androidx.navigation.NavController
 import com.example.ccl3_ws2025_mindflow.R
-import com.example.ccl3_ws2025_mindflow.data.mood.MoodType
 import com.example.ccl3_ws2025_mindflow.data.tasks.TodayTaskRow
-import com.example.ccl3_ws2025_mindflow.ui.breathing.BreathingExercise
-import com.example.ccl3_ws2025_mindflow.ui.breathing.breathingExercises
 import com.example.ccl3_ws2025_mindflow.ui.theme.*
-import kotlinx.coroutines.delay
-import androidx.compose.ui.platform.LocalLifecycleOwner
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleEventObserver
+import kotlinx.coroutines.flow.collectLatest
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HomeScreen(navController: NavController, viewModel: HomeViewModel) {
-    val lifecycleOwner = LocalLifecycleOwner.current
+fun HomeScreen(
+    navController: NavController,
+    viewModel: HomeViewModel
+) {
+    // UI-only state that belongs to UI system (scroll position)
+    val scrollState = rememberScrollState()
 
-    DisposableEffect(lifecycleOwner) {
-        val observer = LifecycleEventObserver { _, event ->
-            if (event == Lifecycle.Event.ON_RESUME) {
-                viewModel.refreshDate()
+    // Collect state
+    val state by viewModel.uiState.collectAsState()
+
+    // Collect one-shot navigation events (no navigation logic in composables)
+    LaunchedEffect(Unit) {
+        viewModel.navEvents.collectLatest { event ->
+            when (event) {
+                is HomeNavEvent.Navigate -> navController.navigate(event.route)
+                is HomeNavEvent.PopBack -> navController.popBackStack()
+                is HomeNavEvent.ScrollToBottom -> scrollState.animateScrollTo(scrollState.maxValue)
             }
         }
-        lifecycleOwner.lifecycle.addObserver(observer)
-        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
     }
 
-    val state by viewModel.uiState.collectAsState()
-    var tasksExpanded by rememberSaveable { mutableStateOf(false) }
-
-    // Hoisted scroll state so BreathingCard can scroll when expanded
-    val scrollState = rememberScrollState()
+    // Tell VM when screen is visible again (no lifecycle observer in UI)
+    LaunchedEffect(Unit) {
+        viewModel.onScreenShown()
+    }
 
     MindFlowBackground {
         Box(modifier = Modifier.padding(Dimens.ScreenPadding)) {
@@ -78,34 +70,44 @@ fun HomeScreen(navController: NavController, viewModel: HomeViewModel) {
                     .verticalScroll(scrollState),
                 verticalArrangement = Arrangement.spacedBy(Dimens.CardGap)
             ) {
-
                 MoodJourneyHeader(
-                    mood = state.todayMood,
-                    onOpenJourney = { navController.navigate("moodJourney") },
-                    onEditMood = { viewModel.openMoodPicker() }
+                    moodIcon = state.moodIcon,
+                    showMoodPlaceholder = state.showMoodPlaceholder,
+                    onOpenJourney = viewModel::onOpenMoodJourney,
+                    onEditMood = viewModel::openMoodPicker
                 )
 
                 TodayTasksCard(
+                    title = state.tasksTitle,
+                    progressLabel = state.progressLabel,
+                    streakLabel = state.streakLabel,
                     progress = state.progress,
-                    streakDays = state.streakDays,
-                    rows = state.todayTasks,
-                    expanded = tasksExpanded,
-                    onToggleDone = { taskId -> viewModel.toggleTaskDone(taskId) },
-                    onToggleExpand = { tasksExpanded = !tasksExpanded },
-                    onManage = { navController.navigate("tasks") },
-                    onHistory = { navController.navigate("history") }
+                    rows = state.shownTaskRows,
+                    expanded = state.tasksExpanded,
+                    canExpand = state.tasksCanExpand,
+                    expandLabel = state.tasksExpandLabel,
+                    onToggleDone = viewModel::toggleTaskDone,
+                    onToggleExpand = viewModel::toggleTasksExpanded,
+                    onManage = viewModel::onOpenTasks,
+                    onHistory = viewModel::onOpenTaskHistory
                 )
 
                 DailyNoteToSelfCard(
-                    yesterdayNote = state.yesterdayNote,
-                    onLeaveMessageForTomorrow = { navController.navigate("noteToSelf") },
-                    onHistory = { navController.navigate("noteHistory") }
+                    yesterdayNote = state.yesterdayNoteText,
+                    onLeaveMessageForTomorrow = viewModel::onOpenNoteToSelf,
+                    onHistory = viewModel::onOpenNoteHistory
                 )
 
-
                 BreathingCard(
-                    navController = navController,
-                    scrollState = scrollState
+                    title = state.breathingTitle,
+                    selectedLabel = state.breathingSelectedLabel,
+                    expanded = state.breathingExpanded,
+                    canStart = state.breathingCanStart,
+                    expandIconUp = state.breathingExpandIconUp,
+                    exercises = state.breathingExercises,
+                    onToggleExpand = viewModel::toggleBreathingExpanded,
+                    onSelectExercise = viewModel::selectBreathingExercise,
+                    onStart = viewModel::startBreathing
                 )
 
                 Spacer(modifier = Modifier.height(6.dp))
@@ -113,8 +115,8 @@ fun HomeScreen(navController: NavController, viewModel: HomeViewModel) {
 
             if (state.showMoodOverlay) {
                 MoodOverlay(
-                    onSelect = { mood -> viewModel.selectMood(mood) },
-                    onDismissOnce = { viewModel.dismissOverlayOnce() }
+                    onSelect = viewModel::selectMood,
+                    onDismissOnce = viewModel::dismissOverlayOnce
                 )
             }
         }
@@ -123,13 +125,12 @@ fun HomeScreen(navController: NavController, viewModel: HomeViewModel) {
 
 @Composable
 private fun MoodJourneyHeader(
-    mood: MoodType?,
+    moodIcon: androidx.compose.ui.graphics.vector.ImageVector?,
+    showMoodPlaceholder: Boolean,
     onOpenJourney: () -> Unit,
     onEditMood: () -> Unit
 ) {
     Box(modifier = Modifier.fillMaxWidth()) {
-
-        // Card itself still opens journey
         MindFlowCard(
             modifier = Modifier
                 .fillMaxWidth()
@@ -144,7 +145,6 @@ private fun MoodJourneyHeader(
                     style = MaterialTheme.typography.titleLarge,
                     modifier = Modifier.weight(1f)
                 )
-                // Reserve space so mood button doesn't overlap text
                 Spacer(modifier = Modifier.width(72.dp))
             }
 
@@ -170,64 +170,64 @@ private fun MoodJourneyHeader(
         Box(
             modifier = Modifier
                 .align(Alignment.TopEnd)
-                .padding(top =0.dp, end = 0.dp) // keep it inside the card corner
-                .size(72.dp)                     // BIG hit target (easy to tap)
+                .size(72.dp)
                 .zIndex(999f)
                 .clip(CircleShape)
-                .background(MindFlowColors.Surface.copy(alpha = 0.001f)) // practically invisible but captures taps
+                .background(MindFlowColors.Surface.copy(alpha = 0.001f))
                 .clickable { onEditMood() },
-            contentAlignment = Alignment.Center
+            contentAlignment = Alignment.TopCenter
         ) {
-            val showPlaceholder = (mood == null)
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Top,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(top = 6.dp)
+            ) {
+                if (showMoodPlaceholder) {
+                    Image(
+                        painter = painterResource(id = R.drawable.circle_dashed),
+                        contentDescription = "Set mood",
+                        modifier = Modifier.size(34.dp)
+                    )
+                } else {
+                    Icon(
+                        imageVector = moodIcon!!,
+                        contentDescription = "Edit mood",
+                        tint = MindFlowColors.TextPrimary,
+                        modifier = Modifier.size(34.dp)
+                            .offset(y = 4.dp)
+                    )
+                }
 
-            if (showPlaceholder) {
-                Image(
-                    painter = painterResource(id = R.drawable.circle_dashed),
-                    contentDescription = "Set mood",
-                    modifier = Modifier
-                        .size(34.dp)
-                        .offset(y = (-6).dp)
-                )
-            } else {
-                Icon(
-                    imageVector = moodToIcon(mood),
-                    contentDescription = "Edit mood",
-                    tint = MindFlowColors.TextPrimary,
-                    modifier = Modifier
-                        .size(34.dp)
-                        .offset(y = (-6).dp)
+                Spacer(Modifier.height(0.dp))
+
+                Text(
+                    text = "Edit",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MindFlowColors.TextPrimary
                 )
             }
-
-
         }
-    }
-}
 
-private fun moodToIcon(mood: MoodType): ImageVector {
-    return when (mood) {
-        MoodType.VERY_SAD -> Icons.Outlined.SentimentVeryDissatisfied
-        MoodType.SAD -> Icons.Outlined.SentimentDissatisfied
-        MoodType.NEUTRAL -> Icons.Outlined.SentimentNeutral
-        MoodType.HAPPY -> Icons.Outlined.SentimentSatisfied
-        MoodType.VERY_HAPPY -> Icons.Outlined.SentimentVerySatisfied
     }
 }
 
 @Composable
 private fun TodayTasksCard(
+    title: String,
+    progressLabel: String,
+    streakLabel: String,
     progress: Float,
-    streakDays: Int,
     rows: List<TodayTaskRow>,
     expanded: Boolean,
+    canExpand: Boolean,
+    expandLabel: String,
     onToggleDone: (taskId: Long) -> Unit,
     onToggleExpand: () -> Unit,
     onManage: () -> Unit,
     onHistory: () -> Unit
 ) {
-    val collapsedCount = 2
-    val canExpand = rows.size > collapsedCount
-
     MindFlowCard(modifier = Modifier.fillMaxWidth()) {
 
         Row(
@@ -235,7 +235,7 @@ private fun TodayTasksCard(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = "Today’s tasks",
+                text = title,
                 style = MaterialTheme.typography.titleLarge,
                 modifier = Modifier.weight(1f)
             )
@@ -253,27 +253,16 @@ private fun TodayTasksCard(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                "Progress ${(progress * 100).toInt()}%",
+                progressLabel,
                 style = MaterialTheme.typography.bodyMedium,
                 color = MindFlowColors.TextSecondary
             )
             Spacer(Modifier.weight(1f))
-
-            // Always show streak + fire, minimum 0
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(6.dp)
-            ) {
-                Text(
-                    text = "${streakDays.coerceAtLeast(0)}",
-                    style = MaterialTheme.typography.titleMedium
-                )
-                Text("🔥", style = MaterialTheme.typography.titleMedium)
-            }
+            Text(streakLabel, style = MaterialTheme.typography.titleMedium)
         }
 
         LinearProgressIndicator(
-            progress = { progress.coerceIn(0f, 1f) },
+            progress = { progress },
             modifier = Modifier
                 .fillMaxWidth()
                 .height(10.dp),
@@ -288,13 +277,11 @@ private fun TodayTasksCard(
                 color = MindFlowColors.TextMuted
             )
         } else {
-            val shown = if (expanded) rows else rows.take(collapsedCount)
-
             Column(
                 modifier = Modifier.fillMaxWidth(),
                 verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
-                shown.forEach { row ->
+                rows.forEach { row ->
                     PillRowSurface {
                         Checkbox(
                             checked = row.isCompleted,
@@ -322,12 +309,11 @@ private fun TodayTasksCard(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Expand only when needed
             if (canExpand) {
                 TextButton(onClick = onToggleExpand) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Text(
-                            text = if (expanded) "Collapse" else "Expand",
+                            text = expandLabel,
                             color = MindFlowColors.TextMuted
                         )
                         Spacer(Modifier.width(4.dp))
@@ -351,7 +337,7 @@ private fun TodayTasksCard(
 
 @Composable
 private fun DailyNoteToSelfCard(
-    yesterdayNote: String?,
+    yesterdayNote: String,
     onLeaveMessageForTomorrow: () -> Unit,
     onHistory: () -> Unit
 ) {
@@ -361,7 +347,11 @@ private fun DailyNoteToSelfCard(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text("Daily note to self ♡", style = MaterialTheme.typography.titleLarge, modifier = Modifier.weight(1f))
+            Text(
+                "Daily note to self ♡",
+                style = MaterialTheme.typography.titleLarge,
+                modifier = Modifier.weight(1f)
+            )
 
             IconButton(onClick = onHistory) {
                 Icon(
@@ -374,7 +364,7 @@ private fun DailyNoteToSelfCard(
 
         Text("Yesterday’s note:", style = MaterialTheme.typography.labelLarge)
         Text(
-            text = yesterdayNote ?: "(No note from yesterday)",
+            text = yesterdayNote,
             style = MaterialTheme.typography.bodyMedium,
             maxLines = 3,
             overflow = TextOverflow.Ellipsis,
@@ -392,61 +382,47 @@ private fun DailyNoteToSelfCard(
     }
 }
 
-
 @Composable
 private fun BreathingCard(
-    navController: NavController,
-    scrollState: ScrollState
+    title: String,
+    selectedLabel: String,
+    expanded: Boolean,
+    canStart: Boolean,
+    expandIconUp: Boolean,
+    exercises: List<BreathingExerciseUi>,
+    onToggleExpand: () -> Unit,
+    onSelectExercise: (String) -> Unit,
+    onStart: () -> Unit
 ) {
-    var expanded by remember { mutableStateOf(false) }
-    var selectedExercise by remember { mutableStateOf<BreathingExercise?>(null) }
-
-    // Not strictly needed if you always scroll to bottom, but harmless
-    var dropdownTopPx by remember { mutableStateOf(0) }
-
-    LaunchedEffect(expanded) {
-        if (expanded) {
-            delay(16) // let dropdown measure
-            scrollState.animateScrollTo(scrollState.maxValue) // go to bottom
-        }
-    }
-
     MindFlowCard(modifier = Modifier.fillMaxWidth()) {
-        Text("Take a moment to relax", style = MaterialTheme.typography.titleLarge)
+        Text(title, style = MaterialTheme.typography.titleLarge)
 
         Column {
             PillRowSurface(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clickable { expanded = !expanded }
+                    .clickable { onToggleExpand() }
             ) {
                 Text(
-                    text = selectedExercise?.name ?: "Choose breathing exercise",
+                    text = selectedLabel,
                     style = MaterialTheme.typography.bodyMedium,
                     color = MindFlowColors.TextMuted,
                     modifier = Modifier.weight(1f)
                 )
 
                 Icon(
-                    imageVector = if (expanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
+                    imageVector = if (expandIconUp) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
                     contentDescription = null,
                     tint = MindFlowColors.TextMuted
                 )
 
                 Spacer(Modifier.width(8.dp))
 
-                IconButton(
-                    onClick = {
-                        selectedExercise?.let { ex ->
-                            navController.navigate("breathing/${ex.id}")
-                        }
-                    },
-                    enabled = selectedExercise != null
-                ) {
+                IconButton(onClick = onStart, enabled = canStart) {
                     Icon(
                         imageVector = Icons.Default.PlayArrow,
                         contentDescription = "Start",
-                        tint = if (selectedExercise != null) MindFlowColors.Primary else MindFlowColors.TextMuted
+                        tint = if (canStart) MindFlowColors.Primary else MindFlowColors.TextMuted
                     )
                 }
             }
@@ -456,21 +432,15 @@ private fun BreathingCard(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(top = 8.dp)
-                        .onGloballyPositioned { coords ->
-                            dropdownTopPx = coords.positionInParent().y.toInt()
-                        }
                 ) {
-                    breathingExercises.forEach { exercise ->
+                    exercises.forEach { ex ->
                         Text(
-                            text = exercise.name,
+                            text = ex.name,
                             style = MaterialTheme.typography.bodyMedium,
                             color = MindFlowColors.TextSecondary,
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .clickable {
-                                    selectedExercise = exercise
-                                    expanded = false
-                                }
+                                .clickable { onSelectExercise(ex.id) }
                                 .padding(vertical = 10.dp, horizontal = 12.dp)
                         )
                     }

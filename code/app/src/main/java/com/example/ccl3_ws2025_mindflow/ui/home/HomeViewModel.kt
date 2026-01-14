@@ -1,5 +1,12 @@
 package com.example.ccl3_ws2025_mindflow.ui.home
 
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.SentimentDissatisfied
+import androidx.compose.material.icons.outlined.SentimentNeutral
+import androidx.compose.material.icons.outlined.SentimentSatisfied
+import androidx.compose.material.icons.outlined.SentimentVeryDissatisfied
+import androidx.compose.material.icons.outlined.SentimentVerySatisfied
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.ccl3_ws2025_mindflow.data.mood.MoodRepository
@@ -8,32 +15,56 @@ import com.example.ccl3_ws2025_mindflow.data.notes.NoteEntity
 import com.example.ccl3_ws2025_mindflow.data.notes.NoteRepository
 import com.example.ccl3_ws2025_mindflow.data.tasks.TaskRepository
 import com.example.ccl3_ws2025_mindflow.data.tasks.TodayTaskRow
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.stateIn
+import com.example.ccl3_ws2025_mindflow.ui.breathing.breathingExercises
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
+// ---------- Navigation events ----------
+sealed class HomeNavEvent {
+    data class Navigate(val route: String) : HomeNavEvent()
+    data object PopBack : HomeNavEvent()
+    data object ScrollToBottom : HomeNavEvent()
+}
+
+// ---------- Breathing UI models (pure UI data) ----------
+data class BreathingExerciseUi(
+    val id: String,
+    val name: String
+)
+
+// ---------- State ----------
 data class HomeUiState(
+    // Mood
     val todayMood: MoodType? = null,
     val showMoodOverlay: Boolean = false,
-    val yesterdayNote: String? = null,
+    val moodIcon: ImageVector? = null,
+    val showMoodPlaceholder: Boolean = true,
 
+    // Notes
+    val yesterdayNoteText: String = "(No note from yesterday)",
     val tomorrowNoteDraft: String = "",
     val tomorrowNoteSavedPreview: String? = null,
 
-    val todayTasks: List<TodayTaskRow> = emptyList(),
-
+    // Tasks
+    val tasksTitle: String = "Today’s tasks",
+    val shownTaskRows: List<TodayTaskRow> = emptyList(),
+    val tasksExpanded: Boolean = false,
+    val tasksCanExpand: Boolean = false,
+    val tasksExpandLabel: String = "Expand",
     val progress: Float = 0f,
-    val doneCount: Int = 0,
-    val totalCount: Int = 0,
+    val progressLabel: String = "Progress 0%",
+    val streakLabel: String = "0 🔥",
 
-    val streakDays: Int = 0
+    // Breathing
+    val breathingTitle: String = "Take a moment to relax",
+    val breathingExercises: List<BreathingExerciseUi> = emptyList(),
+    val breathingExpanded: Boolean = false,
+    val breathingExpandIconUp: Boolean = false,
+    val breathingSelectedLabel: String = "Choose breathing exercise",
+    val breathingCanStart: Boolean = false
 )
 
 private data class HomePartial(
@@ -42,7 +73,10 @@ private data class HomePartial(
     val tNote: NoteEntity?,
     val todayRows: List<TodayTaskRow>,
     val draft: String,
-    val draftTouched: Boolean
+    val draftTouched: Boolean,
+    val tasksExpanded: Boolean,
+    val breathingExpanded: Boolean,
+    val breathingSelectedId: String?
 )
 
 class HomeViewModel(
@@ -51,35 +85,56 @@ class HomeViewModel(
     private val taskRepo: TaskRepository
 ) : ViewModel() {
 
+    // ----- date keys -----
     private val formatter = DateTimeFormatter.ISO_LOCAL_DATE
+    private fun key(date: LocalDate) = date.format(formatter)
+    private fun todayKey(date: LocalDate) = key(date)
+    private fun yesterdayKey(date: LocalDate) = key(date.minusDays(1))
+    private fun weekday(date: LocalDate) = date.dayOfWeek.value
+
     private val _currentDate = MutableStateFlow(LocalDate.now())
 
+    // ----- UI-only flags owned by VM (so UI has no logic) -----
+    private val _tasksExpanded = MutableStateFlow(false)
+
+    private val _breathingExpanded = MutableStateFlow(false)
+    private val _breathingSelectedId = MutableStateFlow<String?>(null)
+
+    // ----- note draft -----
     private val _tomorrowDraft = MutableStateFlow("")
     private val _tomorrowDraftTouched = MutableStateFlow(false)
 
+    // ----- overlay -----
     private val _overlayDismissedManually = MutableStateFlow(false)
-
-    // NEW: lets us show overlay even if mood already exists
     private val _forceShowMoodOverlay = MutableStateFlow(false)
+
+    // ----- navigation events -----
+    private val _navEvents = Channel<HomeNavEvent>(Channel.BUFFERED)
+    val navEvents: Flow<HomeNavEvent> = _navEvents.receiveAsFlow()
+
+    fun onScreenShown() {
+        // Called by UI once; ensures date refresh logic is centralized
+        refreshDate()
+    }
 
     fun refreshDate() {
         val now = LocalDate.now()
         if (_currentDate.value != now) {
             _currentDate.value = now
+
             _overlayDismissedManually.value = false
             _forceShowMoodOverlay.value = false
 
             _tomorrowDraftTouched.value = false
             _tomorrowDraft.value = ""
+
+            _tasksExpanded.value = false
+            _breathingExpanded.value = false
+            _breathingSelectedId.value = null
         }
     }
 
-    private fun dateKey(date: LocalDate): String = date.format(formatter)
-    private fun todayKey(date: LocalDate): String = dateKey(date)
-    private fun yesterdayKey(date: LocalDate): String = dateKey(date.minusDays(1))
-    private fun tomorrowKey(date: LocalDate): String = dateKey(date.plusDays(1))
-    private fun weekday(date: LocalDate): Int = date.dayOfWeek.value
-
+    // ----- data flows -----
     private val todayRowsFlow = _currentDate.flatMapLatest { date ->
         taskRepo.observeTodayTasks(
             dateKey = todayKey(date),
@@ -102,10 +157,9 @@ class HomeViewModel(
     }
 
     private val tNoteFlow = _currentDate.flatMapLatest { date ->
-        // this is the note you write TODAY (for “tomorrow you”)
+        // IMPORTANT: note you write "today for tomorrow-you" is stored under TODAY
         noteRepo.observeNoteForDate(todayKey(date))
     }
-
 
     private val notesFlow = combine(yNoteFlow, tNoteFlow) { y, t -> y to t }
 
@@ -113,72 +167,148 @@ class HomeViewModel(
         draft to touched
     }
 
-    private val moodNotesFlow = combine(moodFlow, notesFlow) { mood, notes ->
-        mood to notes
-    }
+    private val uiFlagsFlow =
+        combine(_tasksExpanded, _breathingExpanded, _breathingSelectedId) { tExp, bExp, bSel ->
+            Triple(tExp, bExp, bSel)
+        }
 
-    private val moodNotesRowsFlow = combine(moodNotesFlow, todayRowsFlow) { mn, rows ->
-        Triple(mn.first, mn.second, rows)
-    }
-
-    private val partial: StateFlow<HomePartial> = combine(moodNotesRowsFlow, draftFlow) { triple, draftPair ->
-        val mood = triple.first
-        val yNote = triple.second.first
-        val tNote = triple.second.second
-        val rows = triple.third
-
-        HomePartial(
-            mood = mood,
-            yNote = yNote,
-            tNote = tNote,
-            todayRows = rows,
-            draft = draftPair.first,
-            draftTouched = draftPair.second
+    private val partial: StateFlow<HomePartial> =
+        combine(moodFlow, notesFlow, todayRowsFlow, draftFlow, uiFlagsFlow) { mood, notes, rows, draftPair, flags ->
+            HomePartial(
+                mood = mood,
+                yNote = notes.first,
+                tNote = notes.second,
+                todayRows = rows,
+                draft = draftPair.first,
+                draftTouched = draftPair.second,
+                tasksExpanded = flags.first,
+                breathingExpanded = flags.second,
+                breathingSelectedId = flags.third
+            )
+        }.stateIn(
+            viewModelScope,
+            SharingStarted.WhileSubscribed(5_000),
+            HomePartial(null, null, null, emptyList(), "", false, false, false, null)
         )
-    }.stateIn(
-        viewModelScope,
-        SharingStarted.WhileSubscribed(5_000),
-        HomePartial(null, null, null, emptyList(), "", false)
-    )
 
-    // include force flag so UI updates immediately
     private val overlayInputsFlow =
         combine(partial, _overlayDismissedManually, _forceShowMoodOverlay) { p, dismissed, forced ->
             Triple(p, dismissed, forced)
         }
 
-    val uiState: StateFlow<HomeUiState> = combine(overlayInputsFlow, streakFlow) { triple, streakDays ->
-        val p = triple.first
-        val dismissed = triple.second
-        val forced = triple.third
+    val uiState: StateFlow<HomeUiState> =
+        combine(overlayInputsFlow, streakFlow) { triple, streakDays ->
+            val p = triple.first
+            val dismissed = triple.second
+            val forced = triple.third
 
-        val total = p.todayRows.size
-        val done = p.todayRows.count { it.isCompleted }
-        val progress = if (total == 0) 0f else done.toFloat() / total.toFloat()
+            // ----- overlay -----
+            val shouldShowOverlay = (((p.mood == null) && !dismissed) || forced)
 
-        val shouldShowOverlay = (((p.mood == null) && !dismissed) || forced)
+            // ----- mood icon -----
+            val showPlaceholder = (p.mood == null)
+            val icon = p.mood?.let { moodToIcon(it) }
 
-        val savedTomorrow = p.tNote?.text
-        val effectiveDraft =
-            if (!p.draftTouched && p.draft.isBlank() && !savedTomorrow.isNullOrBlank()) savedTomorrow
-            else p.draft
+            // ----- tasks derived -----
+            val collapsedCount = 2
+            val canExpand = p.todayRows.size > collapsedCount
+            val shownRows =
+                if (p.tasksExpanded) p.todayRows else p.todayRows.take(collapsedCount)
 
-        HomeUiState(
-            todayMood = p.mood,
-            showMoodOverlay = shouldShowOverlay,
-            yesterdayNote = p.yNote?.text,
+            val total = p.todayRows.size
+            val done = p.todayRows.count { it.isCompleted }
+            val progress = if (total == 0) 0f else (done.toFloat() / total.toFloat()).coerceIn(0f, 1f)
+            val progressLabel = "Progress ${(progress * 100).toInt()}%"
+            val streakLabel = "${streakDays.coerceAtLeast(0)} 🔥"
+            val expandLabel = if (p.tasksExpanded) "Collapse" else "Expand"
 
-            tomorrowNoteDraft = effectiveDraft,
-            tomorrowNoteSavedPreview = savedTomorrow,
+            // ----- notes derived -----
+            val savedTomorrow = p.tNote?.text
+            val effectiveDraft =
+                if (!p.draftTouched && p.draft.isBlank() && !savedTomorrow.isNullOrBlank()) savedTomorrow
+                else p.draft
 
-            todayTasks = p.todayRows,
-            progress = progress,
-            doneCount = done,
-            totalCount = total,
-            streakDays = streakDays
-        )
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), HomeUiState())
+            val yesterdayText = p.yNote?.text ?: "(No note from yesterday)"
 
+            // ----- breathing derived -----
+            val breathingList = breathingExercises.map { BreathingExerciseUi(it.id, it.name) }
+            val selectedName = breathingExercises.firstOrNull { it.id == p.breathingSelectedId }?.name
+            val breathingSelectedLabel = selectedName ?: "Choose breathing exercise"
+            val canStart = (p.breathingSelectedId != null)
+            val expandIconUp = p.breathingExpanded
+
+            HomeUiState(
+                todayMood = p.mood,
+                showMoodOverlay = shouldShowOverlay,
+                moodIcon = icon,
+                showMoodPlaceholder = showPlaceholder,
+
+                yesterdayNoteText = yesterdayText,
+                tomorrowNoteDraft = effectiveDraft,
+                tomorrowNoteSavedPreview = savedTomorrow,
+
+                shownTaskRows = shownRows,
+                tasksExpanded = p.tasksExpanded,
+                tasksCanExpand = canExpand,
+                tasksExpandLabel = expandLabel,
+                progress = progress,
+                progressLabel = progressLabel,
+                streakLabel = streakLabel,
+
+                breathingExercises = breathingList,
+                breathingExpanded = p.breathingExpanded,
+                breathingExpandIconUp = expandIconUp,
+                breathingSelectedLabel = breathingSelectedLabel,
+                breathingCanStart = canStart
+            )
+        }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), HomeUiState())
+
+    // ---------- EVENTS from UI (no logic in UI) ----------
+
+    fun onOpenMoodJourney() {
+        viewModelScope.launch { _navEvents.send(HomeNavEvent.Navigate("moodJourney")) }
+    }
+
+    fun onOpenTasks() {
+        viewModelScope.launch { _navEvents.send(HomeNavEvent.Navigate("tasks")) }
+    }
+
+    fun onOpenTaskHistory() {
+        viewModelScope.launch { _navEvents.send(HomeNavEvent.Navigate("history")) }
+    }
+
+    fun onOpenNoteToSelf() {
+        viewModelScope.launch { _navEvents.send(HomeNavEvent.Navigate("noteToSelf")) }
+    }
+
+    fun onOpenNoteHistory() {
+        viewModelScope.launch { _navEvents.send(HomeNavEvent.Navigate("noteHistory")) }
+    }
+
+    fun toggleTasksExpanded() {
+        _tasksExpanded.value = !_tasksExpanded.value
+    }
+
+    fun toggleBreathingExpanded() {
+        val now = !_breathingExpanded.value
+        _breathingExpanded.value = now
+        if (now) {
+            // match your old behavior: when expanded, scroll to bottom
+            viewModelScope.launch { _navEvents.send(HomeNavEvent.ScrollToBottom) }
+        }
+    }
+
+    fun selectBreathingExercise(exerciseId: String) {
+        _breathingSelectedId.value = exerciseId
+        _breathingExpanded.value = false
+    }
+
+    fun startBreathing() {
+        val id = _breathingSelectedId.value ?: return
+        viewModelScope.launch { _navEvents.send(HomeNavEvent.Navigate("breathing/$id")) }
+    }
+
+    // Notes
     fun onTomorrowDraftChanged(text: String) {
         _tomorrowDraftTouched.value = true
         _tomorrowDraft.value = text
@@ -189,12 +319,11 @@ class HomeViewModel(
         viewModelScope.launch {
             val date = _currentDate.value
             noteRepo.saveNote(todayKey(date), text)
-
             _tomorrowDraftTouched.value = false
         }
     }
 
-    // NEW: called when emoji is tapped
+    // Mood overlay
     fun openMoodPicker() {
         _forceShowMoodOverlay.value = true
         _overlayDismissedManually.value = false
@@ -204,8 +333,6 @@ class HomeViewModel(
         viewModelScope.launch {
             val key = todayKey(_currentDate.value)
             moodRepo.saveMood(key, mood)
-
-            // close overlay after selection
             _forceShowMoodOverlay.value = false
             _overlayDismissedManually.value = false
         }
@@ -216,10 +343,22 @@ class HomeViewModel(
         _forceShowMoodOverlay.value = false
     }
 
+    // Tasks
     fun toggleTaskDone(taskId: Long) {
         viewModelScope.launch {
             val dateKey = todayKey(_currentDate.value)
             taskRepo.toggleCompletion(taskId = taskId, dateKey = dateKey)
+        }
+    }
+
+    // ---------- helper ----------
+    private fun moodToIcon(mood: MoodType): ImageVector {
+        return when (mood) {
+            MoodType.VERY_SAD -> Icons.Outlined.SentimentVeryDissatisfied
+            MoodType.SAD -> Icons.Outlined.SentimentDissatisfied
+            MoodType.NEUTRAL -> Icons.Outlined.SentimentNeutral
+            MoodType.HAPPY -> Icons.Outlined.SentimentSatisfied
+            MoodType.VERY_HAPPY -> Icons.Outlined.SentimentVerySatisfied
         }
     }
 }

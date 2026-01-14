@@ -63,7 +63,7 @@ fun HistoryScreen(
             containerColor = androidx.compose.ui.graphics.Color.Transparent,
             topBar = {
                 CenterAlignedTopAppBar(
-                    title = { Text("History", style = MaterialTheme.typography.titleLarge) },
+                    title = { Text("Schedule", style = MaterialTheme.typography.titleLarge) },
                     navigationIcon = {
                         IconButton(onClick = { navController.popBackStack() }) {
                             Icon(Icons.Default.ArrowBack, contentDescription = "Back")

@@ -34,4 +34,7 @@ object MindFlowColors {
     val Success = Color(0xFF4AB264)     // progress end
     val Danger = Color(0xFFE74C3C)
     val OverlayScrim = Color(0xB3000000)
+
+    val SurfaceStrong = Color(0xFFEFF5F5)
+
 }

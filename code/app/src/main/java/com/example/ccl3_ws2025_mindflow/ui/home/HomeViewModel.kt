@@ -186,7 +186,7 @@ class HomeViewModel(
         val text = _tomorrowDraft.value
         viewModelScope.launch {
             val date = _currentDate.value
-            noteRepo.saveNote(tomorrowKey(date), text)
+            noteRepo.saveNote(todayKey(date), text)
             _tomorrowDraftTouched.value = false
         }
     }

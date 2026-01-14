@@ -332,6 +332,29 @@ fun AddEditTaskScreen(
                         textColor = MindFlowColors.OnPrimary,
                         containerColor = MindFlowColors.Primary
                     )
+                    if (taskId != -1L) { // Only show if editing an existing task
+                        Button(
+                            onClick = {
+                                viewModel.deleteTask(taskId) // Delete the task
+                                navController.popBackStack() // Go back after deletion
+                            },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(Dimens.PillHeight),
+                            shape = RoundedCornerShape(Dimens.PillRadius),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = MindFlowColors.Surface,
+                                contentColor = MindFlowColors.Danger
+                            ),
+                            border = BorderStroke(2.dp, MindFlowColors.Danger)
+                        ) {
+                            Text(
+                                "Delete",
+                                style = MaterialTheme.typography.labelLarge,
+                                color = MindFlowColors.Danger
+                            )
+                        }
+                    }
                 }
             }
         }

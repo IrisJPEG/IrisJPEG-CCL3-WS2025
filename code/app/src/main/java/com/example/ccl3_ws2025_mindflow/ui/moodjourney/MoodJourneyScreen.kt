@@ -154,27 +154,29 @@ private fun MoodNode(mood: MoodType) {
         MoodType.VERY_HAPPY -> 40.dp
     }
 
-    Surface(
-        shape = CircleShape,
-        color = Color(0xFFF2F2F2),
-        shadowElevation = 8.dp,
+    Box(
         modifier = Modifier
-            .size(circleSize)
-            .shadow(8.dp, CircleShape)
+            .size(circleSize),
+        contentAlignment = Alignment.Center
     ) {
-        Box(
+        // Lilipad background
+        Image(
+            painter = painterResource(id = R.drawable.lilipad),
+            contentDescription = null,
             modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(
-                imageVector = moodToIcon(mood),
-                contentDescription = null,
-                tint = MindFlowColors.TextPrimary,
-                modifier = Modifier.size(iconSize)
-            )
-        }
+            contentScale = ContentScale.Crop
+        )
+
+        // Emoji icon on top
+        Icon(
+            imageVector = moodToIcon(mood),
+            contentDescription = null,
+            tint = Color.White, // emoji is white
+            modifier = Modifier.size(iconSize)
+        )
     }
 }
+
 
 private fun moodToIcon(mood: MoodType): ImageVector {
     return when (mood) {

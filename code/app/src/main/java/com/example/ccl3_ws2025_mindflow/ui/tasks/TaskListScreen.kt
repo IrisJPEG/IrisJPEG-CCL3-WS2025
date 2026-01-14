@@ -1,12 +1,13 @@
 package com.example.ccl3_ws2025_mindflow.ui.tasks
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -14,7 +15,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.example.ccl3_ws2025_mindflow.data.tasks.TaskEntity
 import com.example.ccl3_ws2025_mindflow.ui.theme.*
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -58,7 +62,10 @@ fun TaskListScreen(
                         .padding(padding),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text("No tasks yet.\nTap + to add your first task.", color = MindFlowColors.TextSecondary)
+                    Text(
+                        "No tasks yet.\nTap + to add your first task.",
+                        color = MindFlowColors.TextSecondary
+                    )
                 }
             } else {
                 LazyColumn(
@@ -74,8 +81,19 @@ fun TaskListScreen(
                                 .fillMaxWidth()
                                 .clickable { navController.navigate("addEditTask/${task.id}") }
                         ) {
-                            Text(task.title, style = MaterialTheme.typography.titleMedium)
-                            TaskWeekdaysRow(daysCsv = task.daysCsv)
+                            Column(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                Text(task.title, style = MaterialTheme.typography.titleMedium)
+
+                                if (task.isOneTime) {
+                                    OneTimeScheduleLine(dateKey = task.oneTimeDateKey)
+                                } else {
+                                    // Your original “nice row” of days
+                                    TaskWeekdaysRow(daysCsv = task.daysCsv)
+                                }
+                            }
                         }
                     }
                 }
@@ -84,6 +102,34 @@ fun TaskListScreen(
     }
 }
 
+@Composable
+private fun OneTimeScheduleLine(dateKey: String?) {
+    val formattedDate = dateKey?.let {
+        // Parse the dateKey as a LocalDate object and format it as "day/month/year"
+        try {
+            val date = LocalDate.parse(it) // Assumes date is in "yyyy-MM-dd" format
+            date.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))
+        } catch (e: Exception) {
+            // Return the original string if parsing fails (fallback)
+            it
+        }
+    } ?: "No date" // Fallback in case dateKey is null
+
+    AssistChip(
+        onClick = { /* no-op */ },
+        label = {
+            Text(
+                text = "Scheduled for: $formattedDate",
+                style = MaterialTheme.typography.labelLarge
+            )
+        },
+        colors = AssistChipDefaults.assistChipColors(
+            containerColor = MindFlowColors.Surface,
+            labelColor = MindFlowColors.TextPrimary
+        ),
+        border = BorderStroke(1.dp, MindFlowColors.Transparent)
+    )
+}
 
 @Composable
 private fun TaskWeekdaysRow(daysCsv: String) {
@@ -102,12 +148,8 @@ private fun TaskWeekdaysRow(daysCsv: String) {
                 style = MaterialTheme.typography.labelLarge.copy(
                     fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
                 ),
-                color = if (isSelected)
-                    MindFlowColors.TextPrimary
-                else
-                    MindFlowColors.TextMuted
+                color = if (isSelected) MindFlowColors.TextPrimary else MindFlowColors.TextMuted
             )
         }
     }
 }
-

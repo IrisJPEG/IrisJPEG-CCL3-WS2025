@@ -91,8 +91,16 @@ class TaskRepository(
         val all = taskDao.observeAllTasks().first()
 
         return all.filter { task ->
-            val active = taskIsActiveOnWeekday(task.daysCsv, weekday)
             val existed = task.createdDateKey <= dateKey
+
+            val active =
+                if (task.isOneTime) {
+                    task.oneTimeDateKey == dateKey
+                } else {
+                    val activeByWeekday = taskIsActiveOnWeekday(task.daysCsv, weekday)
+                    activeByWeekday
+                }
+
             active && existed
         }
     }

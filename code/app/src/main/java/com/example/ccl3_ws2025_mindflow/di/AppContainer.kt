@@ -9,20 +9,25 @@ import com.example.ccl3_ws2025_mindflow.data.tasks.TaskRepository
 
 class AppContainer(context: Context) {
 
+    // Single Room database instance for the whole app
     private val db: AppDatabase = Room.databaseBuilder(
-        context,
+        context.applicationContext, // important: avoid leaking an Activity
         AppDatabase::class.java,
         "mindflow_db"
     )
-        .fallbackToDestructiveMigration()
+        //.fallbackToDestructiveMigration() FOR DEBUGGING
         .build()
 
-    val moodRepository = MoodRepository(db.moodDao())
-    val noteRepository = NoteRepository(db.noteDao())
+    // Repositories (single source of truth)
+    val moodRepository: MoodRepository =
+        MoodRepository(db.moodDao())
 
-    // NEW
-    val taskRepository = TaskRepository(
-        taskDao = db.taskDao(),
-        completionDao = db.taskCompletionDao()
-    )
+    val noteRepository: NoteRepository =
+        NoteRepository(db.noteDao())
+
+    val taskRepository: TaskRepository =
+        TaskRepository(
+            taskDao = db.taskDao(),
+            completionDao = db.taskCompletionDao()
+        )
 }

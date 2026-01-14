@@ -14,14 +14,28 @@ class TaskViewModel(private val repo: TaskRepository) : ViewModel() {
 
     suspend fun getTaskById(id: Long): TaskEntity? = repo.getTaskById(id)
 
-    fun upsertTask(id: Long, title: String, selectedDays: List<Int>) {
+    fun upsertTask(
+        id: Long,
+        title: String,
+        selectedDays: List<Int>,
+        repeatOnlyOnce: Boolean,
+        oneTimeDateKey: String?
+    ) {
         val trimmed = title.trim()
-        if (trimmed.isEmpty() || selectedDays.isEmpty()) return
+        if (trimmed.isEmpty()) return
+
+        val valid =
+            if (repeatOnlyOnce) !oneTimeDateKey.isNullOrBlank()
+            else selectedDays.isNotEmpty()
+
+        if (!valid) return
 
         val entity = TaskEntity(
             id = id,
             title = trimmed,
-            daysCsv = selectedDays.sorted().joinToString(","),
+            daysCsv = if (repeatOnlyOnce) "" else selectedDays.sorted().joinToString(","),
+            isOneTime = repeatOnlyOnce,
+            oneTimeDateKey = if (repeatOnlyOnce) oneTimeDateKey else null,
             createdDateKey = LocalDate.now().toString()
         )
 

@@ -198,12 +198,20 @@ class HistoryViewModel(
         val weekday = date.dayOfWeek.value // Mon=1..Sun=7
         val isFuture = date.isAfter(today)
 
-        // Tasks that exist for that date (createdDateKey gate prevents showing in weeks/months before creation/update)
+        // Tasks that exist for that date (createdDateKey gate prevents showing before creation)
         val tasksForDay = allTasks.filter { task ->
-            val active = repo.taskIsActiveOnWeekday(task.daysCsv, weekday)
             val existed = task.createdDateKey <= dateKey
+
+            val active =
+                if (task.isOneTime) {
+                    task.oneTimeDateKey == dateKey
+                } else {
+                    repo.taskIsActiveOnWeekday(task.daysCsv, weekday)
+                }
+
             active && existed
         }
+
 
         val completions = repo.getCompletionsForDate(dateKey)
         val completionMap = completions.associateBy { it.taskId }

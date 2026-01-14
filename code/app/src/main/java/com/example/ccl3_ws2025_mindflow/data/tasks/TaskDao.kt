@@ -33,15 +33,20 @@ interface TaskDao {
      */
     @Query(
         """
-        SELECT t.*, 
-               COALESCE(c.isCompleted, 0) AS isCompleted
-        FROM tasks t
-        LEFT JOIN task_completions c
-               ON c.taskId = t.id AND c.dateKey = :dateKey
-        WHERE (',' || REPLACE(t.daysCsv, ' ', '') || ',') LIKE ('%,' || :weekday || ',%')
-          AND t.createdDateKey <= :dateKey
-        ORDER BY t.id DESC
-        """
+SELECT 
+  t.*,
+  IFNULL(c.isCompleted, 0) AS isCompleted
+FROM tasks t
+LEFT JOIN task_completions c
+  ON c.taskId = t.id AND c.dateKey = :dateKey
+WHERE t.createdDateKey <= :dateKey
+  AND (
+      (t.isOneTime = 1 AND t.oneTimeDateKey = :dateKey)
+      OR
+      (t.isOneTime = 0 AND instr(',' || t.daysCsv || ',', ',' || :weekday || ',') > 0)
+  )
+ORDER BY t.id DESC
+"""
     )
     fun observeTodayTasks(dateKey: String, weekday: Int): Flow<List<TodayTaskRow>>
 }

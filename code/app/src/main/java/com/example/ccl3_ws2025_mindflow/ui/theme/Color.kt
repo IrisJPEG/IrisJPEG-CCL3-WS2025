@@ -36,5 +36,6 @@ object MindFlowColors {
     val OverlayScrim = Color(0xB3000000)
 
     val SurfaceStrong = Color(0xFFEFF5F5)
+    val Transparent = Color(0x00000000) // Fully transparent
 
 }

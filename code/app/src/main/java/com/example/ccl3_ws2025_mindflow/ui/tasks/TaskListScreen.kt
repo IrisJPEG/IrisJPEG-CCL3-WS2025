@@ -115,20 +115,18 @@ private fun OneTimeScheduleLine(dateKey: String?) {
         }
     } ?: "No date" // Fallback in case dateKey is null
 
-    AssistChip(
-        onClick = { /* no-op */ },
-        label = {
-            Text(
-                text = "Scheduled for: $formattedDate",
-                style = MaterialTheme.typography.labelLarge
-            )
-        },
-        colors = AssistChipDefaults.assistChipColors(
-            containerColor = MindFlowColors.Surface,
-            labelColor = MindFlowColors.TextPrimary
-        ),
-        border = BorderStroke(1.dp, MindFlowColors.Transparent)
-    )
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(start = 8.dp) // Align "Scheduled for" text with the weekday labels
+    ) {
+        Text(
+            text = "Scheduled for: $formattedDate",
+            style = MaterialTheme.typography.labelLarge,
+            modifier = Modifier
+                .weight(1f) // Ensures it uses the same space as weekdays
+        )
+    }
 }
 
 @Composable

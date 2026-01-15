@@ -1,6 +1,7 @@
 package com.example.ccl3_ws2025_mindflow.ui.history
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -16,6 +17,7 @@ import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
@@ -126,18 +128,33 @@ fun HistoryScreen(
 
                         // Toggle Week / Month
                         SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
+
                             SegmentedButton(
                                 selected = mode == HistoryViewMode.WEEK,
                                 onClick = { mode = HistoryViewMode.WEEK },
-                                shape = SegmentedButtonDefaults.itemShape(index = 0, count = 2)
-                            ) { Text("Week") }
+                                shape = SegmentedButtonDefaults.itemShape(index = 0, count = 2),
+                                colors = SegmentedButtonDefaults.colors(
+                                    activeContainerColor = Color(0xFFD9D9D9),   // light gray bg when selected
+                                ),
+                                icon = {}
+                            ) {
+                                Text("Week")
+                            }
 
                             SegmentedButton(
                                 selected = mode == HistoryViewMode.MONTH,
                                 onClick = { mode = HistoryViewMode.MONTH },
-                                shape = SegmentedButtonDefaults.itemShape(index = 1, count = 2)
-                            ) { Text("Month") }
+                                shape = SegmentedButtonDefaults.itemShape(index = 1, count = 2),
+                                colors = SegmentedButtonDefaults.colors(
+                                    activeContainerColor = Color(0xFFD9D9D9),
+                                ),
+                                icon = {}
+                            ) {
+                                Text("Month")
+                            }
                         }
+
+
                     }
                 }
 

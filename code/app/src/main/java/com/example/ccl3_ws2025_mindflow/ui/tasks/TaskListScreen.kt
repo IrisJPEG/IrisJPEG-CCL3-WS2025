@@ -1,6 +1,7 @@
 package com.example.ccl3_ws2025_mindflow.ui.tasks
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -12,6 +13,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
@@ -108,7 +110,7 @@ private fun OneTimeScheduleLine(dateKey: String?) {
         // Parse the dateKey as a LocalDate object and format it as "day/month/year"
         try {
             val date = LocalDate.parse(it) // Assumes date is in "yyyy-MM-dd" format
-            date.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))
+            date.format(DateTimeFormatter.ofPattern("dd-MM-yyyy"))
         } catch (e: Exception) {
             // Return the original string if parsing fails (fallback)
             it
@@ -118,13 +120,12 @@ private fun OneTimeScheduleLine(dateKey: String?) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(start = 8.dp) // Align "Scheduled for" text with the weekday labels
     ) {
         Text(
             text = "Scheduled for: $formattedDate",
-            style = MaterialTheme.typography.labelLarge,
+            style = MaterialTheme.typography.labelMedium,
+            color = MindFlowColors.TextMuted,
             modifier = Modifier
-                .weight(1f) // Ensures it uses the same space as weekdays
         )
     }
 }

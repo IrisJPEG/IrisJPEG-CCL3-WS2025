@@ -90,7 +90,7 @@ fun TaskListScreen(
                                 if (task.isOneTime) {
                                     OneTimeScheduleLine(dateKey = task.oneTimeDateKey)
                                 } else {
-                                    // Your original “nice row” of days
+
                                     TaskWeekdaysRow(daysCsv = task.daysCsv)
                                 }
                             }
@@ -143,7 +143,7 @@ private fun TaskWeekdaysRow(daysCsv: String) {
 
             Text(
                 text = label,
-                style = MaterialTheme.typography.labelLarge.copy(
+                style = MaterialTheme.typography.labelMedium.copy(
                     fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
                 ),
                 color = if (isSelected) MindFlowColors.TextPrimary else MindFlowColors.TextMuted

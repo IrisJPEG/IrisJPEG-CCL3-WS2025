@@ -13,6 +13,7 @@ import com.example.ccl3_ws2025_mindflow.ui.moodjourney.MoodJourneyViewModel
 import com.example.ccl3_ws2025_mindflow.ui.navigation.NavGraph
 import com.example.ccl3_ws2025_mindflow.ui.tasks.TaskViewModel
 import com.example.ccl3_ws2025_mindflow.ui.history.NoteHistoryViewModel
+import com.example.ccl3_ws2025_mindflow.ui.theme.CCL3WS2025MindFlowTheme
 
 class MainActivity : ComponentActivity() {
 
@@ -34,7 +35,7 @@ class MainActivity : ComponentActivity() {
         val moodJourneyViewModel = MoodJourneyViewModel(app.container.moodRepository)
         val noteHistoryViewModel = NoteHistoryViewModel(app.container.noteRepository)
 
-        setContent {
+        setContent {CCL3WS2025MindFlowTheme{
             val navController = rememberNavController()
             NavGraph(
                 navController = navController,
@@ -45,6 +46,8 @@ class MainActivity : ComponentActivity() {
                 noteHistoryViewModel = noteHistoryViewModel
 
             )
+        }
+
         }
     }
 }

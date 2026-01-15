@@ -11,10 +11,12 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Notes
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.outlined.CalendarToday
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -22,9 +24,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import androidx.navigation.NavController
 import com.example.ccl3_ws2025_mindflow.R
@@ -77,6 +81,18 @@ fun HomeScreen(
                     onEditMood = viewModel::openMoodPicker
                 )
 
+                BreathingCard(
+                    title = state.breathingTitle,
+                    selectedLabel = state.breathingSelectedLabel,
+                    expanded = state.breathingExpanded,
+                    canStart = state.breathingCanStart,
+                    expandIconUp = state.breathingExpandIconUp,
+                    exercises = state.breathingExercises,
+                    onToggleExpand = viewModel::toggleBreathingExpanded,
+                    onSelectExercise = viewModel::selectBreathingExercise,
+                    onStart = viewModel::startBreathing
+                )
+
                 TodayTasksCard(
                     title = state.tasksTitle,
                     progressLabel = state.progressLabel,
@@ -91,24 +107,13 @@ fun HomeScreen(
                     onManage = viewModel::onOpenTasks,
                     onHistory = viewModel::onOpenTaskHistory
                 )
-
                 DailyNoteToSelfCard(
                     yesterdayNote = state.yesterdayNoteText,
                     onLeaveMessageForTomorrow = viewModel::onOpenNoteToSelf,
                     onHistory = viewModel::onOpenNoteHistory
                 )
 
-                BreathingCard(
-                    title = state.breathingTitle,
-                    selectedLabel = state.breathingSelectedLabel,
-                    expanded = state.breathingExpanded,
-                    canStart = state.breathingCanStart,
-                    expandIconUp = state.breathingExpandIconUp,
-                    exercises = state.breathingExercises,
-                    onToggleExpand = viewModel::toggleBreathingExpanded,
-                    onSelectExercise = viewModel::selectBreathingExercise,
-                    onStart = viewModel::startBreathing
-                )
+
 
                 Spacer(modifier = Modifier.height(6.dp))
             }
@@ -239,11 +244,24 @@ private fun TodayTasksCard(
                 style = MaterialTheme.typography.titleLarge,
                 modifier = Modifier.weight(1f)
             )
-            IconButton(onClick = onHistory) {
-                Icon(
-                    Icons.Default.History,
-                    contentDescription = "History",
-                    tint = MindFlowColors.TextMuted
+
+//            IconButton(onClick = onHistory) {
+//                Icon(
+//                    imageVector = Icons.Outlined.CalendarToday,
+//                    contentDescription = "History",
+//                    tint = MindFlowColors.TextMuted
+//                )
+//            }
+            TextButton(
+                onClick = onHistory,
+                modifier = Modifier.width(90.dp),
+            ) {
+                Text(
+                    text = "View in calendar",
+                    color = MindFlowColors.TextMuted,
+                    style = MaterialTheme.typography.labelMedium,
+                    textAlign = TextAlign.End,
+                    modifier = Modifier.fillMaxWidth()
                 )
             }
         }
@@ -273,7 +291,7 @@ private fun TodayTasksCard(
         if (rows.isEmpty()) {
             Text(
                 "(No tasks scheduled for today)",
-                style = MaterialTheme.typography.bodyMedium,
+                style = MaterialTheme.typography.labelMedium,
                 color = MindFlowColors.TextMuted
             )
         } else {
@@ -282,7 +300,9 @@ private fun TodayTasksCard(
                 verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
                 rows.forEach { row ->
-                    PillRowSurface {
+                    PillRowSurface(
+                        modifier = Modifier.height(50.dp)
+                    ) {
                         Checkbox(
                             checked = row.isCompleted,
                             onCheckedChange = { onToggleDone(row.task.id) },
@@ -314,7 +334,8 @@ private fun TodayTasksCard(
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Text(
                             text = expandLabel,
-                            color = MindFlowColors.TextMuted
+                            color = MindFlowColors.TextMuted,
+                            style = MaterialTheme.typography.labelMedium,
                         )
                         Spacer(Modifier.width(4.dp))
                         Icon(
@@ -329,7 +350,9 @@ private fun TodayTasksCard(
             }
 
             TextButton(onClick = onManage) {
-                Text("Manage", color = MindFlowColors.TextMuted)
+                Text("Manage",
+                    color = MindFlowColors.TextMuted,
+                    style = MaterialTheme.typography.labelMedium,)
             }
         }
     }
@@ -401,6 +424,7 @@ private fun BreathingCard(
             PillRowSurface(
                 modifier = Modifier
                     .fillMaxWidth()
+                    .height(50.dp)
                     .clickable { onToggleExpand() }
             ) {
                 Text(
@@ -416,7 +440,6 @@ private fun BreathingCard(
                     tint = MindFlowColors.TextMuted
                 )
 
-                Spacer(Modifier.width(8.dp))
 
                 IconButton(onClick = onStart, enabled = canStart) {
                     Icon(

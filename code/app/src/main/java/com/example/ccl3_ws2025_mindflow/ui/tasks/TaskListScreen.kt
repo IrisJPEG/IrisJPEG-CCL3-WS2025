@@ -123,7 +123,9 @@ private fun OneTimeScheduleLine(dateKey: String?) {
     ) {
         Text(
             text = "Scheduled for: $formattedDate",
-            style = MaterialTheme.typography.labelMedium,
+            style = MaterialTheme.typography.labelMedium.copy(
+                fontWeight = FontWeight.Normal
+            ),
             color = MindFlowColors.TextMuted,
             modifier = Modifier
         )

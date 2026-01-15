@@ -2,6 +2,7 @@ package com.example.ccl3_ws2025_mindflow.ui.history
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -90,7 +91,7 @@ fun HistoryScreen(
                 MindFlowCard(modifier = Modifier.fillMaxWidth()) {
                     Column(
                         modifier = Modifier.fillMaxWidth(),
-                        verticalArrangement = Arrangement.spacedBy(10.dp)
+                        verticalArrangement = Arrangement.spacedBy(0.dp)
                     ) {
                         Row(
                             modifier = Modifier.fillMaxWidth(),
@@ -186,7 +187,7 @@ fun HistoryScreen(
                                         verticalAlignment = Alignment.CenterVertically
                                     ) {
                                         Column(modifier = Modifier.weight(1f)) {
-                                            Text(day.dateLabel, style = MaterialTheme.typography.titleMedium)
+                                            Text(day.dateLabel, style = MaterialTheme.typography.titleSmall)
 
                                             val statusText = when (day.status) {
                                                 DayStatus.COMPLETED -> "Completed"
@@ -202,7 +203,7 @@ fun HistoryScreen(
                                             }
 
                                             val statusColor = if (day.status == DayStatus.COMPLETED) {
-                                                MindFlowColors.TextPrimary
+                                                MindFlowColors.HillMid
                                             } else {
                                                 MindFlowColors.TextMuted
                                             }
@@ -276,11 +277,13 @@ fun HistoryScreen(
                         item("selected_header") {
                             MindFlowCard(modifier = Modifier.fillMaxWidth()) {
                                 Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                                    // Date
                                     Text(
                                         text = selectedCell?.date?.let { it.toString() } ?: "Select a day",
                                         style = MaterialTheme.typography.titleMedium
                                     )
 
+                                    // Status text
                                     val statusText = when (selectedCell?.status) {
                                         DayStatus.COMPLETED -> "Completed"
                                         DayStatus.INCOMPLETE -> "Incomplete"
@@ -295,7 +298,7 @@ fun HistoryScreen(
                                     }
 
                                     val statusColor = if (selectedCell?.status == DayStatus.COMPLETED) {
-                                        MindFlowColors.TextPrimary
+                                        MindFlowColors.HillMid
                                     } else {
                                         MindFlowColors.TextMuted
                                     }
@@ -303,46 +306,43 @@ fun HistoryScreen(
                                     Text(
                                         text = statusText,
                                         style = statusStyle,
-                                        color = statusColor
-                                    )
-                                }
-                            }
-                        }
-
-                        if (selectedTasks.isEmpty()) {
-                            item("no_tasks") {
-                                MindFlowCard(modifier = Modifier.fillMaxWidth()) {
-                                    Text(
-                                        text = "No tasks for this day.",
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        color = MindFlowColors.TextMuted
-                                    )
-                                }
-                            }
-                        } else {
-                            items(selectedTasks.size) { index ->
-                                val row = selectedTasks[index]
-                                // If you want NO STROKE in history tasks:
-                                // PillRowSurfaceNoStroke { ... }
-                                PillRowSurface {
-                                    Text(
-                                        text = row.task.title,
-                                        style = MaterialTheme.typography.bodyLarge,
-                                        modifier = Modifier.weight(1f),
-                                        maxLines = 1,
-                                        overflow = TextOverflow.Ellipsis
+                                        color = statusColor,
+                                        modifier = Modifier.padding( 6.dp)
                                     )
 
-                                    // Only show ✓ when completed (no ✕)
-                                    if (!isFuture && row.isCompleted) {
-                                        Text(
-                                            text = "✓",
-                                            style = MaterialTheme.typography.labelLarge
-                                        )
+                                    // Tasks list (inside the same card)
+                                    if (selectedTasks.isEmpty()) {
+                                      //
+                                    } else {
+                                        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                                            selectedTasks.forEach { row ->
+                                                PillRowSurface {
+                                                    Text(
+                                                        text = row.task.title,
+                                                        style = MaterialTheme.typography.bodyLarge,
+                                                        modifier = Modifier.weight(1f),
+                                                        maxLines = 1,
+                                                        overflow = TextOverflow.Ellipsis
+                                                    )
+
+                                                    // Only show ✓ when completed
+                                                    if (!isFuture && row.isCompleted) {
+                                                        Text(
+                                                            text = "✓",
+                                                            style = MaterialTheme.typography.labelLarge,
+                                                            color = MindFlowColors.HillMid
+                                                        )
+                                                    }
+                                                }
+                                            }
+                                        }
                                     }
                                 }
                             }
                         }
+
+
+
 
                         item("bottom_spacer") { Spacer(Modifier.height(12.dp)) }
                     }
@@ -393,47 +393,40 @@ private fun MonthCalendar(
                         // Make out-of-month days look quieter
                         val alpha = if (cell.isInDisplayedMonth) 1f else 0.4f
 
-                        Surface(
+                        Box(
                             modifier = Modifier
                                 .weight(1f)
                                 .aspectRatio(1f)
-                                .clickable { onSelectDay(cell.isoKey) },
-                            color = bg.copy(alpha = alpha),
-                            shape = RoundedCornerShape(12.dp),
-                            border = if (isSelected) BorderStroke(2.dp, MindFlowColors.TextPrimary) else null,
-                            tonalElevation = 0.dp
-                        ) {
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .padding(8.dp),
-                                contentAlignment = Alignment.TopStart
-                            ) {
-                                Text(
-                                    text = cell.dayOfMonth.toString(),
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = if (cell.isInDisplayedMonth) MindFlowColors.TextPrimary else MindFlowColors.TextMuted
+                                .clickable { onSelectDay(cell.isoKey) }
+                                .background(bg.copy(alpha = alpha), shape = RoundedCornerShape(12.dp))
+                                .then(
+                                    if (isSelected) Modifier.border(2.dp, MindFlowColors.HillMid, RoundedCornerShape(12.dp))
+                                    else Modifier
                                 )
+                                .padding(8.dp),
+                            contentAlignment = Alignment.TopStart
+                        ) {
+                            Text(
+                                text = cell.dayOfMonth.toString(),
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = if (cell.isInDisplayedMonth) MindFlowColors.TextPrimary else MindFlowColors.TextMuted
+                            )
 
-                                // Tiny dot indicator if there are tasks
-                                if (cell.tasks.isNotEmpty()) {
-                                    Box(
-                                        modifier = Modifier
-                                            .align(Alignment.BottomEnd)
-                                            .size(8.dp)
-                                            .padding(2.dp)
-                                            .then(Modifier)
-                                    ) {
-                                        Surface(
-                                            modifier = Modifier.fillMaxSize(),
-                                            shape = RoundedCornerShape(50),
-                                            color = MindFlowColors.TextPrimary.copy(alpha = alpha),
-                                            tonalElevation = 0.dp
-                                        ) {}
-                                    }
-                                }
+                            // Tiny dot indicator if there are tasks
+                            if (cell.tasks.isNotEmpty() && cell.isInDisplayedMonth) {
+                                Text(
+                                    text = cell.date.dayOfMonth.toString(),
+                                    style = if (cell.tasks.isNotEmpty())
+                                        MaterialTheme.typography.bodyMedium.copy(
+                                            fontWeight = FontWeight.Bold,
+                                            color = MindFlowColors.HillMid
+                                        )
+                                    else
+                                        MaterialTheme.typography.bodyMedium.copy(color = MindFlowColors.TextPrimary)
+                                )
                             }
                         }
+
                     }
                 }
             }

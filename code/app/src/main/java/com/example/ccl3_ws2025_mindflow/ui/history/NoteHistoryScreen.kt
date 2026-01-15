@@ -23,6 +23,7 @@ fun NoteHistoryScreen(
 ) {
     val weekNotes by viewModel.weekNotes.collectAsState()
     val headerLabel by viewModel.headerLabel.collectAsState()
+    val isAtCurrentWeek by viewModel.isAtCurrentWeek.collectAsState()
 
     MindFlowBackground {
         Scaffold(
@@ -63,8 +64,18 @@ fun NoteHistoryScreen(
 
                         Text(headerLabel, style = MaterialTheme.typography.titleLarge)
 
-                        IconButton(onClick = { viewModel.nextWeek() }) {
-                            Icon(Icons.Default.ArrowForward, contentDescription = "Next", tint = MindFlowColors.TextPrimary)
+                        IconButton(
+                            onClick = { viewModel.nextWeek() },
+                            enabled = !isAtCurrentWeek
+                        ) {
+                            Icon(
+                                Icons.Default.ArrowForward,
+                                contentDescription = "Next",
+                                tint = if (isAtCurrentWeek)
+                                    MindFlowColors.TextMuted
+                                else
+                                    MindFlowColors.TextPrimary
+                            )
                         }
                     }
                 }

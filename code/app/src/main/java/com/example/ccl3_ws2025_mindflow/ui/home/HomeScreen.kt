@@ -4,6 +4,7 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -22,6 +23,8 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
@@ -136,16 +139,15 @@ fun HomeScreen(
 
 @Composable
 private fun MoodJourneyHeader(
-    moodIcon: androidx.compose.ui.graphics.vector.ImageVector?,
+    moodIcon: ImageVector?,
     showMoodPlaceholder: Boolean,
     onOpenJourney: () -> Unit,
     onEditMood: () -> Unit
 ) {
     Box(modifier = Modifier.fillMaxWidth()) {
+
         MindFlowCard(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clickable { onOpenJourney() }
+            modifier = Modifier.fillMaxWidth() // ❌ no clickable anymore
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -159,23 +161,35 @@ private fun MoodJourneyHeader(
                 Spacer(modifier = Modifier.width(72.dp))
             }
 
-            Surface(
+            Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(140.dp),
-                shape = RoundedCornerShape(18.dp),
-                border = BorderStroke(2.dp, MindFlowColors.Surface),
-                color = MindFlowColors.Surface
+                    .height(140.dp)
             ) {
-                Image(
-                    painter = painterResource(id = R.drawable.mood_journey_flip),
-                    contentDescription = null,
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .clip(RoundedCornerShape(18.dp)),
-                    contentScale = ContentScale.FillWidth
-                )
+                Surface(
+                    modifier = Modifier.fillMaxSize(),
+                    shape = RoundedCornerShape(18.dp),
+                    border = BorderStroke(2.dp, MindFlowColors.Surface),
+                    color = MindFlowColors.Surface
+                ) {
+                    Image(
+                        painter = painterResource(id = R.drawable.mood_journey_flip),
+                        contentDescription = null,
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .clip(RoundedCornerShape(18.dp)),
+                        contentScale = ContentScale.FillWidth
+                    )
+                }
             }
+            PillOutlineButton(
+                text = "View your journey",
+                onClick = onOpenJourney,
+                modifier = Modifier.fillMaxWidth(),
+                borderColor = MindFlowColors.Stroke,
+                textColor = MindFlowColors.Primary,
+                containerColor = MindFlowColors.Surface
+            )
         }
 
         Box(
@@ -190,7 +204,6 @@ private fun MoodJourneyHeader(
         ) {
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Top,
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(top = 6.dp)
@@ -212,19 +225,17 @@ private fun MoodJourneyHeader(
                     )
                 }
 
-                Spacer(Modifier.height(0.dp))
-
                 Text(
                     text = "Edit",
                     style = MaterialTheme.typography.labelSmall,
                     color = MindFlowColors.TextPrimary,
-                            modifier = Modifier.offset(y = (-6).dp)
+                    modifier = Modifier.offset(y = (-6).dp)
                 )
             }
         }
-
     }
 }
+
 
 @Composable
 private fun TodayTasksCard(

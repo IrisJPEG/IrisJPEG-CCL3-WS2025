@@ -198,7 +198,7 @@ private fun MoodJourneyHeader(
                     Image(
                         painter = painterResource(id = R.drawable.circle_dashed),
                         contentDescription = "Set mood",
-                        modifier = Modifier.size(34.dp)
+                        modifier = Modifier.size(25.dp)
                     )
                 } else {
                     Icon(
@@ -206,7 +206,7 @@ private fun MoodJourneyHeader(
                         contentDescription = "Edit mood",
                         tint = MindFlowColors.TextPrimary,
                         modifier = Modifier.size(34.dp)
-                            .offset(y = 4.dp)
+                            .offset(y = -2.dp)
                     )
                 }
 
@@ -215,7 +215,8 @@ private fun MoodJourneyHeader(
                 Text(
                     text = "Edit",
                     style = MaterialTheme.typography.labelSmall,
-                    color = MindFlowColors.TextPrimary
+                    color = MindFlowColors.TextPrimary,
+                            modifier = Modifier.offset(y = (-6).dp)
                 )
             }
         }

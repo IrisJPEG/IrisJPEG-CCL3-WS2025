@@ -87,6 +87,21 @@ fun HomeScreen(
                     onEditMood = viewModel::openMoodPicker
                 )
 
+                TodayTasksCard(
+                    title = state.tasksTitle,
+                    progressLabel = state.progressLabel,
+                    streakLabel = state.streakLabel,
+                    progress = state.progress,
+                    rows = state.shownTaskRows,
+                    expanded = state.tasksExpanded,
+                    canExpand = state.tasksCanExpand,
+                    expandLabel = state.tasksExpandLabel,
+                    onToggleDone = viewModel::toggleTaskDone,
+                    onToggleExpand = viewModel::toggleTasksExpanded,
+                    onManage = viewModel::onOpenTasks,
+                    onHistory = viewModel::onOpenTaskHistory
+                )
+
                 DailyNoteToSelfCard(
                     yesterdayNote = state.yesterdayNoteText,
                     onLeaveMessageForTomorrow = viewModel::onOpenNoteToSelf,
@@ -105,20 +120,7 @@ fun HomeScreen(
                     onStart = viewModel::startBreathing
                 )
 
-                TodayTasksCard(
-                    title = state.tasksTitle,
-                    progressLabel = state.progressLabel,
-                    streakLabel = state.streakLabel,
-                    progress = state.progress,
-                    rows = state.shownTaskRows,
-                    expanded = state.tasksExpanded,
-                    canExpand = state.tasksCanExpand,
-                    expandLabel = state.tasksExpandLabel,
-                    onToggleDone = viewModel::toggleTaskDone,
-                    onToggleExpand = viewModel::toggleTasksExpanded,
-                    onManage = viewModel::onOpenTasks,
-                    onHistory = viewModel::onOpenTaskHistory
-                )
+
 
 
 

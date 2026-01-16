@@ -362,7 +362,7 @@ private fun TodayTasksCard(
 
             TextButton(onClick = onManage) {
                 Text("Manage",
-                    color = MindFlowColors.TextMuted,
+                    color = MindFlowColors.TextPrimary,
                     style = MaterialTheme.typography.labelMedium,)
             }
         }

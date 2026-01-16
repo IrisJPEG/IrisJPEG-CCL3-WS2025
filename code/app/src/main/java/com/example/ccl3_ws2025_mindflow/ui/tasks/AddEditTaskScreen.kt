@@ -176,7 +176,7 @@ fun AddEditTaskScreen(
                 Text(
                     text = "Repeat weekly",
                     style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Normal),
-                    color = MindFlowColors.TextMuted, // Light grey color
+                    color = MindFlowColors.TextPrimary, // Light grey color
                     modifier = Modifier.padding(bottom = 0.dp) // Add space below the label
                 )
                 // --- Weekday container (disabled when repeatOnlyOnce) ---

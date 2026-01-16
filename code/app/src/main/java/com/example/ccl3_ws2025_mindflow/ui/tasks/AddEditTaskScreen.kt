@@ -383,7 +383,7 @@ private fun NumberDropdownField(
         modifier = modifier
     ) {
         OutlinedTextField(
-            value = value,
+            value = if (value.isBlank()) " " else value,
             onValueChange = { new -> onValueChange(new.filter { it.isDigit() }) },
             modifier = Modifier
                 .menuAnchor()

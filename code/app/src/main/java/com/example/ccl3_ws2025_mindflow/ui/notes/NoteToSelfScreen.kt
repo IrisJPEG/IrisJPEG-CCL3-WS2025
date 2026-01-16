@@ -42,7 +42,7 @@ fun NoteToSelfScreen(
                             text = "Note to self for\ntomorrow ♡",
                             style = MaterialTheme.typography.titleLarge,
                             textAlign = TextAlign.Center,
-                            modifier = Modifier.fillMaxWidth()
+
                         )
                     },
                     navigationIcon = {

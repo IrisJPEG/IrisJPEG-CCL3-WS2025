@@ -11,6 +11,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
@@ -206,7 +207,7 @@ private fun MoodJourneyHeader(
                         imageVector = moodIcon!!,
                         contentDescription = "Edit mood",
                         tint = MindFlowColors.TextPrimary,
-                        modifier = Modifier.size(34.dp)
+                        modifier = Modifier.size(32.dp)
                             .offset(y = -2.dp)
                     )
                 }
@@ -252,25 +253,15 @@ private fun TodayTasksCard(
                 modifier = Modifier.weight(1f)
             )
 
-//            IconButton(onClick = onHistory) {
-//                Icon(
-//                    imageVector = Icons.Outlined.CalendarToday,
-//                    contentDescription = "History",
-//                    tint = MindFlowColors.TextMuted
-//                )
-//            }
-            TextButton(
-                onClick = onHistory,
-                modifier = Modifier.width(90.dp),
-            ) {
-                Text(
-                    text = "View in calendar",
-                    color = MindFlowColors.TextMuted,
-                    style = MaterialTheme.typography.labelMedium,
-                    textAlign = TextAlign.End,
-                    modifier = Modifier.fillMaxWidth()
+            IconButton(onClick = onHistory) {
+                Icon(
+                    imageVector = Icons.Filled.CalendarToday,
+                    contentDescription = "View in calendar",
+                    tint = MindFlowColors.TextMuted,
+                            modifier = Modifier.size(25.dp)
                 )
             }
+
         }
 
         Row(
@@ -387,7 +378,8 @@ private fun DailyNoteToSelfCard(
                 Icon(
                     Icons.Default.History,
                     contentDescription = "Notes history",
-                    tint = MindFlowColors.TextMuted
+                    tint = MindFlowColors.TextMuted,
+                    modifier = Modifier.size(29.dp)
                 )
             }
         }

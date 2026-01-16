@@ -11,12 +11,11 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.Notes
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material.icons.outlined.CalendarToday
+import kotlinx.coroutines.android.awaitFrame
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -28,7 +27,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import androidx.navigation.NavController
 import com.example.ccl3_ws2025_mindflow.R
@@ -63,7 +61,12 @@ fun HomeScreen(
     LaunchedEffect(Unit) {
         viewModel.onScreenShown()
     }
-
+    LaunchedEffect(state.tasksExpanded) {
+        if (state.tasksExpanded) {
+            awaitFrame()
+            scrollState.animateScrollTo(scrollState.maxValue)
+        }
+    }
     MindFlowBackground {
         Box(modifier = Modifier.padding(Dimens.ScreenPadding)) {
 
@@ -79,6 +82,12 @@ fun HomeScreen(
                     showMoodPlaceholder = state.showMoodPlaceholder,
                     onOpenJourney = viewModel::onOpenMoodJourney,
                     onEditMood = viewModel::openMoodPicker
+                )
+
+                DailyNoteToSelfCard(
+                    yesterdayNote = state.yesterdayNoteText,
+                    onLeaveMessageForTomorrow = viewModel::onOpenNoteToSelf,
+                    onHistory = viewModel::onOpenNoteHistory
                 )
 
                 BreathingCard(
@@ -107,11 +116,7 @@ fun HomeScreen(
                     onManage = viewModel::onOpenTasks,
                     onHistory = viewModel::onOpenTaskHistory
                 )
-                DailyNoteToSelfCard(
-                    yesterdayNote = state.yesterdayNoteText,
-                    onLeaveMessageForTomorrow = viewModel::onOpenNoteToSelf,
-                    onHistory = viewModel::onOpenNoteHistory
-                )
+
 
 
 

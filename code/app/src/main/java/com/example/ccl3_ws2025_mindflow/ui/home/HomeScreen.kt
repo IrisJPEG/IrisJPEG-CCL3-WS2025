@@ -267,7 +267,7 @@ private fun TodayTasksCard(
                 Icon(
                     imageVector = Icons.Filled.CalendarToday,
                     contentDescription = "View in calendar",
-                    tint = MindFlowColors.TextMuted,
+                    tint = MindFlowColors.TextPrimary,
                             modifier = Modifier.size(25.dp)
                 )
             }
@@ -388,7 +388,7 @@ private fun DailyNoteToSelfCard(
                 Icon(
                     Icons.Default.History,
                     contentDescription = "Notes history",
-                    tint = MindFlowColors.TextMuted,
+                    tint = MindFlowColors.TextPrimary,
                     modifier = Modifier.size(29.dp)
                 )
             }

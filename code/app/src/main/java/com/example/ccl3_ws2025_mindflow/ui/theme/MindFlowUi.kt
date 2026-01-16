@@ -18,7 +18,6 @@ fun MindFlowBackground(
     content: @Composable BoxScope.() -> Unit
 ) {
     Box(modifier = modifier.fillMaxSize()) {
-
         Image(
             painter = painterResource(
                 id = com.example.ccl3_ws2025_mindflow.R.drawable.create

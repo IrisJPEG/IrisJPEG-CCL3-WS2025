@@ -23,6 +23,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
@@ -211,7 +212,8 @@ private fun MoodJourneyHeader(
                     Image(
                         painter = painterResource(id = R.drawable.circle_dashed),
                         contentDescription = "Set mood",
-                        modifier = Modifier.size(32.dp)
+                        modifier = Modifier
+                            .size(32.dp)
                             .offset(y = -2.dp)
                     )
                 } else {
@@ -219,7 +221,8 @@ private fun MoodJourneyHeader(
                         imageVector = moodIcon!!,
                         contentDescription = "Edit mood",
                         tint = MindFlowColors.TextPrimary,
-                        modifier = Modifier.size(32.dp)
+                        modifier = Modifier
+                            .size(32.dp)
                             .offset(y = -2.dp)
                     )
                 }
@@ -430,34 +433,61 @@ private fun BreathingCard(
         Text(title, style = MaterialTheme.typography.titleLarge)
 
         Column {
-            PillRowSurface(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(50.dp)
-                    .clickable { onToggleExpand() }
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    text = selectedLabel,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MindFlowColors.TextMuted,
-                    modifier = Modifier.weight(1f)
-                )
+                PillRowSurface(
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(50.dp)
+                        .clickable { onToggleExpand() }
+                ) {
+                    Text(
+                        text = selectedLabel,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MindFlowColors.TextMuted,
+                        modifier = Modifier.weight(1f)
+                    )
 
-                Icon(
-                    imageVector = if (expandIconUp) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
-                    contentDescription = null,
-                    tint = MindFlowColors.TextMuted
-                )
-
-
-                IconButton(onClick = onStart, enabled = canStart) {
                     Icon(
-                        imageVector = Icons.Default.PlayArrow,
-                        contentDescription = "Start",
-                        tint = if (canStart) MindFlowColors.Primary else MindFlowColors.TextMuted
+                        imageVector = if (expandIconUp)
+                            Icons.Default.KeyboardArrowUp
+                        else
+                            Icons.Default.KeyboardArrowDown,
+                        contentDescription = null,
+                        tint = MindFlowColors.TextMuted
                     )
                 }
+
+                Spacer(modifier = Modifier.width(12.dp))
+
+                Surface(
+                    modifier = Modifier.size(50.dp),
+                    shape = CircleShape,
+                    border = BorderStroke(1.dp, MindFlowColors.Stroke),
+                    color = if(canStart)
+                        MindFlowColors.HillMid
+                    else
+                        MindFlowColors.Surface
+                ) {
+                    IconButton(
+                        onClick = onStart,
+                        enabled = canStart
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.PlayArrow,
+                            contentDescription = "Start",
+                            tint = if (canStart)
+                                Color.White
+                            else
+                                Color.LightGray
+                        )
+                    }
+                }
             }
+
 
             if (expanded) {
                 Column(

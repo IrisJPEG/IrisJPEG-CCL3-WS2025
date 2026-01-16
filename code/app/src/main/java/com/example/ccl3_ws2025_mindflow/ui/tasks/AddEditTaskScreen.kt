@@ -17,6 +17,9 @@ import com.example.ccl3_ws2025_mindflow.ui.theme.*
 import java.util.Locale
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.ui.unit.sp
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -145,14 +148,18 @@ fun AddEditTaskScreen(
             }
         ) { padding ->
 
+            val scrollState = rememberScrollState()
+
             Column(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(padding)
-                    .padding(horizontal = Dimens.ScreenPadding),
+                    .padding(horizontal = Dimens.ScreenPadding)
+                    .verticalScroll(scrollState),
                 verticalArrangement = Arrangement.spacedBy(14.dp)
             ) {
-                OutlinedTextField(
+
+            OutlinedTextField(
                     value = title,
                     onValueChange = { title = it },
                     modifier = Modifier.fillMaxWidth(),

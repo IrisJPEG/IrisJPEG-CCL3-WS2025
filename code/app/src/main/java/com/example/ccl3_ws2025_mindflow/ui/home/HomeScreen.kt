@@ -198,7 +198,8 @@ private fun MoodJourneyHeader(
                     Image(
                         painter = painterResource(id = R.drawable.circle_dashed),
                         contentDescription = "Set mood",
-                        modifier = Modifier.size(25.dp)
+                        modifier = Modifier.size(32.dp)
+                            .offset(y = -2.dp)
                     )
                 } else {
                     Icon(

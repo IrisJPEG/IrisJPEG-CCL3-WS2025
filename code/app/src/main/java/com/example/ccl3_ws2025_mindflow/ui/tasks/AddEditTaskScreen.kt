@@ -264,7 +264,7 @@ fun AddEditTaskScreen(
                             horizontalArrangement = Arrangement.spacedBy(10.dp)
                         ) {
                             NumberDropdownField(
-                                label = "DD",
+                                label = "Day",
                                 value = dayText,
                                 onValueChange = {
                                     dayText = it
@@ -278,7 +278,7 @@ fun AddEditTaskScreen(
                             )
 
                             NumberDropdownField(
-                                label = "MM",
+                                label = "Month",
                                 value = monthText,
                                 onValueChange = {
                                     monthText = it
@@ -289,7 +289,7 @@ fun AddEditTaskScreen(
                             )
 
                             NumberDropdownField(
-                                label = "YYYY",
+                                label = "Year",
                                 value = yearText,
                                 onValueChange = {
                                     yearText = it

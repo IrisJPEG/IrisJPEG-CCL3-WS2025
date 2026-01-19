@@ -14,9 +14,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import com.example.ccl3_ws2025_mindflow.data.tasks.TaskEntity
 import com.example.ccl3_ws2025_mindflow.ui.theme.*
-import java.util.Locale
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.rememberScrollState
@@ -33,99 +31,12 @@ fun AddEditTaskScreen(
 ) {
     val daysOfWeek = listOf("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")
 
-    var taskToEdit by remember { mutableStateOf<TaskEntity?>(null) }
-    var title by remember { mutableStateOf("") }
-    val selectedDays = remember { mutableStateListOf<Int>() }
-
-    var repeatOnlyOnce by remember { mutableStateOf(false) }
-
-    // date fields (allow typing + dropdown)
-    var dayText by remember { mutableStateOf("") }
-    var monthText by remember { mutableStateOf("") }
-    var yearText by remember { mutableStateOf("") }
-
-    // Track if user has interacted with the fields
-    var dayInteracted by remember { mutableStateOf(false) }
-    var monthInteracted by remember { mutableStateOf(false) }
-    var yearInteracted by remember { mutableStateOf(false) }
+    // Editor state now lives in the ViewModel
+    val ui by viewModel.editorUiState.collectAsState()
 
     LaunchedEffect(taskId) {
-        if (taskId != -1L) {
-            val t = viewModel.getTaskById(taskId)
-            taskToEdit = t
-            title = t?.title ?: ""
-
-            repeatOnlyOnce = t?.isOneTime ?: false
-
-            selectedDays.clear()
-            if (repeatOnlyOnce) {
-                val key = t?.oneTimeDateKey
-                if (!key.isNullOrBlank() && key.length == 10) {
-                    yearText = key.substring(0, 4)
-                    monthText = key.substring(5, 7).toIntOrNull()?.toString() ?: ""
-                    dayText = key.substring(8, 10).toIntOrNull()?.toString() ?: ""
-                }
-            } else {
-                t?.daysCsv
-                    ?.split(",")
-                    ?.mapNotNull { it.trim().toIntOrNull() }
-                    ?.let { selectedDays.addAll(it) }
-            }
-        }
+        viewModel.startEditing(taskId)
     }
-
-    fun isLeapYear(y: Int): Boolean =
-        (y % 4 == 0 && y % 100 != 0) || (y % 400 == 0)
-
-    fun daysInMonth(y: Int, m: Int): Int = when (m) {
-        1, 3, 5, 7, 8, 10, 12 -> 31
-        4, 6, 9, 11 -> 30
-        2 -> if (isLeapYear(y)) 29 else 28
-        else -> 31
-    }
-
-    val yearInt = yearText.trim().toIntOrNull()
-    val monthInt = monthText.trim().toIntOrNull()
-    val dayInt = dayText.trim().toIntOrNull()
-
-    val maxDay: Int? =
-        if (yearInt != null && monthInt != null && monthInt in 1..12) daysInMonth(yearInt, monthInt)
-        else null
-
-    // gentle clamp only if day is numeric and too large
-    LaunchedEffect(yearInt, monthInt) {
-        val max = maxDay ?: return@LaunchedEffect
-        val d = dayText.trim().toIntOrNull() ?: return@LaunchedEffect
-        if (d > max) dayText = max.toString()
-    }
-
-    val dateError: String? = if (!repeatOnlyOnce) {
-        null
-    } else {
-        when {
-            yearInt == null || yearInt !in 1900..2100 -> "Enter a valid year"
-            monthInt == null || monthInt !in 1..12 -> "Enter a valid month (1–12)"
-            dayInt == null -> "Enter a valid day"
-            maxDay != null && (dayInt < 1 || dayInt > maxDay) -> "That month only has $maxDay days"
-            else -> null
-        }
-    }
-
-    fun buildOneTimeDateKeyOrNull(): String? {
-        if (dateError != null) return null
-        val y = yearInt ?: return null
-        val m = monthInt ?: return null
-        val d = dayInt ?: return null
-        return String.format(Locale.US, "%04d-%02d-%02d", y, m, d)
-    }
-
-    val oneTimeDateKey = if (repeatOnlyOnce) buildOneTimeDateKeyOrNull() else null
-
-    val saveEnabled =
-        title.isNotBlank() && (
-                if (repeatOnlyOnce) oneTimeDateKey != null
-                else selectedDays.isNotEmpty()
-                )
 
     MindFlowBackground {
         Scaffold(
@@ -162,8 +73,8 @@ fun AddEditTaskScreen(
             ) {
 
             OutlinedTextField(
-                    value = title,
-                    onValueChange = { title = it },
+                    value = ui.title,
+                    onValueChange = { viewModel.setTitle(it) },
                     modifier = Modifier.fillMaxWidth(),
                     label = { Text("Task name") },
                     shape = RoundedCornerShape(16.dp),
@@ -198,29 +109,15 @@ fun AddEditTaskScreen(
                     }
 
                     Checkbox(
-                        checked = repeatOnlyOnce,
+                        checked = ui.repeatOnlyOnce,
                         onCheckedChange = { checked ->
-                            repeatOnlyOnce = checked
-
-                            if (checked) {
-                                // switching to one-time: clear weekly selection
-                                selectedDays.clear()
-                            } else {
-                                // switching back to weekly: clear one-time fields
-                                dayText = ""
-                                monthText = ""
-                                yearText = ""
-
-                                dayInteracted = false
-                                monthInteracted = false
-                                yearInteracted = false
-                            }
+                            viewModel.setRepeatOnlyOnce(checked)
                         }
                     )
                 }
 
                 // --- One-time date input (only when checked) ---
-                if (repeatOnlyOnce) {
+                if (ui.repeatOnlyOnce) {
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -239,44 +136,41 @@ fun AddEditTaskScreen(
                         ) {
                             NumberDropdownField(
                                 label = "Day",
-                                value = dayText,
+                                value = ui.dayText,
                                 onValueChange = {
-                                    dayText = it
-                                    dayInteracted = true
+                                    viewModel.setDayText(it)
+                                    viewModel.setDayInteracted(true)
                                 },
-                                options = buildList {
-                                    val max = maxDay ?: 31
-                                    for (d in 1..max) add(d.toString())
-                                },
+                                options = ui.dayOptions,
                                 modifier = Modifier.weight(1f)
                             )
 
                             NumberDropdownField(
                                 label = "Month",
-                                value = monthText,
+                                value = ui.monthText,
                                 onValueChange = {
-                                    monthText = it
-                                    monthInteracted = true
+                                    viewModel.setMonthText(it)
+                                    viewModel.setMonthInteracted(true)
                                 },
-                                options = (1..12).map { it.toString() },
+                                options = ui.monthOptions,
                                 modifier = Modifier.weight(1f)
                             )
 
                             NumberDropdownField(
                                 label = "Year",
-                                value = yearText,
+                                value = ui.yearText,
                                 onValueChange = {
-                                    yearText = it
-                                    yearInteracted = true
+                                    viewModel.setYearText(it)
+                                    viewModel.setYearInteracted(true)
                                 },
-                                options = (2020..2035).map { it.toString() },
+                                options = ui.yearOptions,
                                 modifier = Modifier.weight(1.3f)
                             )
                         }
 
-                        if ((dayInteracted || monthInteracted || yearInteracted) && dateError != null) {
+                        if ((ui.dayInteracted || ui.monthInteracted || ui.yearInteracted) && ui.dateError != null) {
                             Text(
-                                text = dateError,
+                                text = ui.dateError!!,
                                 color = MindFlowColors.Danger,
                                 style = MaterialTheme.typography.bodySmall
                             )
@@ -285,7 +179,7 @@ fun AddEditTaskScreen(
                 }
 
                 // --- WEEKLY (only when NOT one-time) ---
-                if (!repeatOnlyOnce) {
+                if (!ui.repeatOnlyOnce) {
                     Text(
                         text = "Repeat weekly",
                         style = MaterialTheme.typography.titleSmall,
@@ -308,13 +202,10 @@ fun AddEditTaskScreen(
                         ) {
                             daysOfWeek.forEachIndexed { index, label ->
                                 val dayValue = index + 1
-                                val selected = selectedDays.contains(dayValue)
+                                val selected = ui.selectedDays.contains(dayValue)
 
                                 TextButton(
-                                    onClick = {
-                                        if (selected) selectedDays.remove(dayValue)
-                                        else selectedDays.add(dayValue)
-                                    },
+                                    onClick = { viewModel.toggleSelectedDay(dayValue) },
                                     modifier = Modifier.weight(1f),
                                     contentPadding = PaddingValues(0.dp)
                                 ) {
@@ -344,16 +235,10 @@ fun AddEditTaskScreen(
                     PillOutlineButton(
                         text = "Save",
                         onClick = {
-                            viewModel.upsertTask(
-                                id = if (taskId == -1L) 0L else taskId,
-                                title = title,
-                                selectedDays = selectedDays,
-                                repeatOnlyOnce = repeatOnlyOnce,
-                                oneTimeDateKey = oneTimeDateKey
-                            )
+                            viewModel.saveEditing(taskId)
                             navController.popBackStack()
                         },
-                        enabled = saveEnabled,
+                        enabled = ui.saveEnabled,
                         modifier = Modifier.fillMaxWidth(),
                         borderColor = MindFlowColors.Surface,
                         textColor = MindFlowColors.OnPrimary,

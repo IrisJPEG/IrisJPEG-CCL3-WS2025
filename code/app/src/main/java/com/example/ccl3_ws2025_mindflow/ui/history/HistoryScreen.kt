@@ -1,6 +1,5 @@
 package com.example.ccl3_ws2025_mindflow.ui.history
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -19,17 +18,47 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
-import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.navigation.NavController
 import com.example.ccl3_ws2025_mindflow.ui.theme.*
-import androidx.compose.ui.text.font.FontWeight
 import java.time.LocalDate
+import java.time.format.DateTimeFormatter
+import java.util.Locale
 
 private enum class HistoryViewMode { WEEK, MONTH }
+
+// --- Header formatting helpers ---
+private val WeekMonthFmt = DateTimeFormatter.ofPattern("MMM", Locale.ENGLISH)   // Jan
+private val MonthMonthFmt = DateTimeFormatter.ofPattern("MMMM", Locale.ENGLISH) // January
+private val DayFmt = DateTimeFormatter.ofPattern("d", Locale.ENGLISH)
+
+
+private fun formatWeekHeaderFromDates(dates: List<LocalDate>): String? {
+    val start = dates.minOrNull() ?: return null
+    val end = dates.maxOrNull() ?: return null
+
+    return if (start.year == end.year && start.month == end.month) {
+        "${start.format(WeekMonthFmt)} ${start.format(DayFmt)}–${end.format(DayFmt)}"
+    } else if (start.year == end.year) {
+        "${start.format(WeekMonthFmt)} ${start.format(DayFmt)} – " +
+                "${end.format(WeekMonthFmt)} ${end.format(DayFmt)}"
+    } else {
+        "${start.format(WeekMonthFmt)} ${start.dayOfMonth} – " +
+                "${end.format(WeekMonthFmt)} ${end.dayOfMonth}"
+    }
+}
+
+
+private fun formatMonthHeaderFromCells(monthCells: List<MonthDayState>): String? {
+    val anyInMonth = monthCells.firstOrNull { it.isInDisplayedMonth } ?: return null
+    return anyInMonth.date.format(MonthMonthFmt) // January
+}
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -61,9 +90,25 @@ fun HistoryScreen(
         onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
     }
 
+    // --- NEW: computed header label ---
+    // WEEK: parse LocalDate from isoKey (yyyy-MM-dd), then format like "Jan 8–14"
+    // MONTH: show only month ("Jan")
+    val computedHeaderLabel = remember(mode, weekData, monthCells, headerLabel) {
+        when (mode) {
+            HistoryViewMode.WEEK -> {
+                val weekDates: List<LocalDate> = weekData.mapNotNull { day: HistoryDayState ->
+                    runCatching { LocalDate.parse(day.isoKey) }.getOrNull()
+                }
+                formatWeekHeaderFromDates(weekDates) ?: headerLabel
+            }
+
+            HistoryViewMode.MONTH -> formatMonthHeaderFromCells(monthCells) ?: headerLabel
+        }
+    }
+
     MindFlowBackground {
         Scaffold(
-            containerColor = androidx.compose.ui.graphics.Color.Transparent,
+            containerColor = Color.Transparent,
             topBar = {
                 CenterAlignedTopAppBar(
                     title = { Text("Schedule", style = MaterialTheme.typography.titleLarge) },
@@ -73,7 +118,7 @@ fun HistoryScreen(
                         }
                     },
                     colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                        containerColor = androidx.compose.ui.graphics.Color.Transparent
+                        containerColor = Color.Transparent
                     )
                 )
             }
@@ -87,7 +132,7 @@ fun HistoryScreen(
                 verticalArrangement = Arrangement.spacedBy(Dimens.CardGap)
             ) {
 
-                // Header card: arrows + month label + view toggle
+                // Header card: arrows + label + view toggle
                 MindFlowCard(modifier = Modifier.fillMaxWidth()) {
                     Column(
                         modifier = Modifier.fillMaxWidth(),
@@ -111,7 +156,8 @@ fun HistoryScreen(
                                 )
                             }
 
-                            Text(headerLabel, style = MaterialTheme.typography.titleLarge)
+                            // --- CHANGED: use computedHeaderLabel ---
+                            Text(computedHeaderLabel, style = MaterialTheme.typography.titleLarge)
 
                             IconButton(
                                 onClick = {
@@ -135,7 +181,7 @@ fun HistoryScreen(
                                 onClick = { mode = HistoryViewMode.WEEK },
                                 shape = SegmentedButtonDefaults.itemShape(index = 0, count = 2),
                                 colors = SegmentedButtonDefaults.colors(
-                                    activeContainerColor = Color(0xFFD9D9D9),   // light gray bg when selected
+                                    activeContainerColor = Color(0xFFD9D9D9),
                                 ),
                                 icon = {}
                             ) {
@@ -154,13 +200,11 @@ fun HistoryScreen(
                                 Text("Month")
                             }
                         }
-
-
                     }
                 }
 
                 if (mode == HistoryViewMode.WEEK) {
-                    // ---------------- WEEK VIEW (your existing list) ----------------
+                    // ---------------- WEEK VIEW ----------------
                     LazyColumn(
                         modifier = Modifier.fillMaxSize(),
                         verticalArrangement = Arrangement.spacedBy(12.dp)
@@ -229,8 +273,6 @@ fun HistoryScreen(
 
                                         Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                                             day.tasks.forEach { row ->
-                                                // If you want NO STROKE in history tasks:
-                                                // PillRowSurfaceNoStroke { ... }
                                                 PillRowSurface {
                                                     Text(
                                                         text = row.task.title,
@@ -257,7 +299,6 @@ fun HistoryScreen(
                     }
                 } else {
                     // ---------------- MONTH VIEW ----------------
-                    // Calendar + tasks under it, inside a scrolling column
                     LazyColumn(
                         modifier = Modifier.fillMaxSize(),
                         verticalArrangement = Arrangement.spacedBy(12.dp)
@@ -307,12 +348,11 @@ fun HistoryScreen(
                                         text = statusText,
                                         style = statusStyle,
                                         color = statusColor,
-                                        modifier = Modifier.padding( 6.dp)
+                                        modifier = Modifier.padding(6.dp)
                                     )
 
-                                    // Tasks list (inside the same card)
                                     if (selectedTasks.isEmpty()) {
-                                      //
+                                        //
                                     } else {
                                         Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                                             selectedTasks.forEach { row ->
@@ -325,7 +365,6 @@ fun HistoryScreen(
                                                         overflow = TextOverflow.Ellipsis
                                                     )
 
-                                                    // Only show ✓ when completed
                                                     if (!isFuture && row.isCompleted) {
                                                         Text(
                                                             text = "✓",
@@ -340,9 +379,6 @@ fun HistoryScreen(
                                 }
                             }
                         }
-
-
-
 
                         item("bottom_spacer") { Spacer(Modifier.height(12.dp)) }
                     }
@@ -363,7 +399,7 @@ private fun MonthCalendar(
 
             // Weekday headers (Mon start)
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                listOf("Mon","Tue","Wed","Thu","Fri","Sat","Sun").forEach {
+                listOf("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun").forEach {
                     Text(
                         text = it,
                         style = MaterialTheme.typography.labelMedium,
@@ -390,7 +426,6 @@ private fun MonthCalendar(
                             DayStatus.NONE -> MindFlowColors.Surface
                         }
 
-                        // Make out-of-month days look quieter
                         val alpha = if (cell.isInDisplayedMonth) 1f else 0.4f
 
                         Box(
@@ -412,21 +447,16 @@ private fun MonthCalendar(
                                 color = if (cell.isInDisplayedMonth) MindFlowColors.TextPrimary else MindFlowColors.TextMuted
                             )
 
-                            // Tiny dot indicator if there are tasks
                             if (cell.tasks.isNotEmpty() && cell.isInDisplayedMonth) {
                                 Text(
                                     text = cell.date.dayOfMonth.toString(),
-                                    style = if (cell.tasks.isNotEmpty())
-                                        MaterialTheme.typography.bodyMedium.copy(
-                                            fontWeight = FontWeight.Bold,
-                                            color = MindFlowColors.HillMid
-                                        )
-                                    else
-                                        MaterialTheme.typography.bodyMedium.copy(color = MindFlowColors.TextPrimary)
+                                    style = MaterialTheme.typography.bodyMedium.copy(
+                                        fontWeight = FontWeight.Bold,
+                                        color = MindFlowColors.HillMid
+                                    )
                                 )
                             }
                         }
-
                     }
                 }
             }

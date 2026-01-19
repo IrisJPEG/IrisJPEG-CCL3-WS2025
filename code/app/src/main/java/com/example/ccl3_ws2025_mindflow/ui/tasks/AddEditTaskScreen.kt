@@ -176,54 +176,6 @@ fun AddEditTaskScreen(
                     )
                 )
 
-                // --- WEEKLY (only when NOT one-time) ---
-                if (!repeatOnlyOnce) {
-                    Text(
-                        text = "Repeat weekly",
-                        style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Normal),
-                        color = MindFlowColors.TextPrimary,
-                        modifier = Modifier.padding(bottom = 0.dp)
-                    )
-
-                    Surface(
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(Dimens.PillRadius),
-                        color = MindFlowColors.Surface,
-                        border = BorderStroke(1.dp, MindFlowColors.Stroke)
-                    ) {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 10.dp, vertical = 4.dp),
-                            horizontalArrangement = Arrangement.spacedBy(6.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            daysOfWeek.forEachIndexed { index, label ->
-                                val dayValue = index + 1
-                                val selected = selectedDays.contains(dayValue)
-
-                                TextButton(
-                                    onClick = {
-                                        if (selected) selectedDays.remove(dayValue)
-                                        else selectedDays.add(dayValue)
-                                    },
-                                    modifier = Modifier.weight(1f),
-                                    contentPadding = PaddingValues(0.dp)
-                                ) {
-                                    Text(
-                                        text = label,
-                                        maxLines = 1,
-                                        softWrap = false,
-                                        style = MaterialTheme.typography.labelLarge.copy(
-                                            fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal
-                                        ),
-                                        color = if (selected) MindFlowColors.TextPrimary else MindFlowColors.TextMuted
-                                    )
-                                }
-                            }
-                        }
-                    }
-                }
 
                 // --- Repeat only once row ---
                 Row(
@@ -328,6 +280,55 @@ fun AddEditTaskScreen(
                                 color = MindFlowColors.Danger,
                                 style = MaterialTheme.typography.bodySmall
                             )
+                        }
+                    }
+                }
+
+                // --- WEEKLY (only when NOT one-time) ---
+                if (!repeatOnlyOnce) {
+                    Text(
+                        text = "Repeat weekly",
+                        style = MaterialTheme.typography.titleSmall,
+                        color = MindFlowColors.TextPrimary,
+                        modifier = Modifier.padding(4.dp)
+                    )
+
+                    Surface(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(Dimens.PillRadius),
+                        color = MindFlowColors.Surface,
+                        border = BorderStroke(1.dp, MindFlowColors.Stroke)
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 10.dp, vertical = 4.dp),
+                            horizontalArrangement = Arrangement.spacedBy(6.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            daysOfWeek.forEachIndexed { index, label ->
+                                val dayValue = index + 1
+                                val selected = selectedDays.contains(dayValue)
+
+                                TextButton(
+                                    onClick = {
+                                        if (selected) selectedDays.remove(dayValue)
+                                        else selectedDays.add(dayValue)
+                                    },
+                                    modifier = Modifier.weight(1f),
+                                    contentPadding = PaddingValues(0.dp)
+                                ) {
+                                    Text(
+                                        text = label,
+                                        maxLines = 1,
+                                        softWrap = false,
+                                        style = MaterialTheme.typography.labelLarge.copy(
+                                            fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal
+                                        ),
+                                        color = if (selected) MindFlowColors.TextPrimary else MindFlowColors.TextMuted
+                                    )
+                                }
+                            }
                         }
                     }
                 }

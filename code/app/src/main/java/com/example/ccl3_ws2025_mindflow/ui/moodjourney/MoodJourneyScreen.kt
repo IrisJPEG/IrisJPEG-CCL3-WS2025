@@ -130,7 +130,7 @@ fun MoodJourneyScreen(
             Icon(
                 imageVector = Icons.Default.ArrowBack,
                 contentDescription = "Back",
-                tint = MindFlowColors.TextPrimary
+                tint = MindFlowColors.OnPrimary
             )
         }
     }

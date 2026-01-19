@@ -2,7 +2,9 @@ package com.example.ccl3_ws2025_mindflow.ui.tasks
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
@@ -17,10 +19,6 @@ import com.example.ccl3_ws2025_mindflow.ui.theme.*
 import java.util.Locale
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.ui.unit.sp
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
-
-
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -159,7 +157,7 @@ fun AddEditTaskScreen(
                 verticalArrangement = Arrangement.spacedBy(14.dp)
             ) {
 
-            OutlinedTextField(
+                OutlinedTextField(
                     value = title,
                     onValueChange = { title = it },
                     modifier = Modifier.fillMaxWidth(),
@@ -173,61 +171,61 @@ fun AddEditTaskScreen(
                         cursorColor = MindFlowColors.TextPrimary
                     )
                 )
-                Text(
-                    text = "Repeat weekly",
-                    style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Normal),
-                    color = MindFlowColors.TextPrimary, // Light grey color
-                    modifier = Modifier.padding(bottom = 0.dp) // Add space below the label
-                )
-                // --- Weekday container (disabled when repeatOnlyOnce) ---
-                Surface(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(Dimens.PillRadius),
-                    color = MindFlowColors.Surface,
-                    border = BorderStroke(1.dp, MindFlowColors.Stroke)
-                ) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 10.dp, vertical = 4.dp),
-                        horizontalArrangement = Arrangement.spacedBy(6.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        daysOfWeek.forEachIndexed { index, label ->
-                            val dayValue = index + 1
-                            val selected = selectedDays.contains(dayValue)
 
-                            TextButton(
-                                onClick = {
-                                    if (repeatOnlyOnce) return@TextButton
-                                    if (selected) selectedDays.remove(dayValue)
-                                    else selectedDays.add(dayValue)
-                                },
-                                modifier = Modifier.weight(1f),
-                                enabled = !repeatOnlyOnce,
-                                contentPadding = PaddingValues(0.dp)
-                            ) {
-                                Text(
-                                    text = label,
-                                    maxLines = 1,
-                                    softWrap = false,
-                                    style = MaterialTheme.typography.labelLarge.copy(
-                                        fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal
-                                    ),
-                                    color = if (repeatOnlyOnce) MindFlowColors.TextMuted
-                                    else if (selected) MindFlowColors.TextPrimary
-                                    else MindFlowColors.TextMuted
-                                )
+                // --- WEEKLY (only when NOT one-time) ---
+                if (!repeatOnlyOnce) {
+                    Text(
+                        text = "Repeat weekly",
+                        style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Normal),
+                        color = MindFlowColors.TextPrimary,
+                        modifier = Modifier.padding(bottom = 0.dp)
+                    )
+
+                    Surface(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(Dimens.PillRadius),
+                        color = MindFlowColors.Surface,
+                        border = BorderStroke(1.dp, MindFlowColors.Stroke)
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 10.dp, vertical = 4.dp),
+                            horizontalArrangement = Arrangement.spacedBy(6.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            daysOfWeek.forEachIndexed { index, label ->
+                                val dayValue = index + 1
+                                val selected = selectedDays.contains(dayValue)
+
+                                TextButton(
+                                    onClick = {
+                                        if (selected) selectedDays.remove(dayValue)
+                                        else selectedDays.add(dayValue)
+                                    },
+                                    modifier = Modifier.weight(1f),
+                                    contentPadding = PaddingValues(0.dp)
+                                ) {
+                                    Text(
+                                        text = label,
+                                        maxLines = 1,
+                                        softWrap = false,
+                                        style = MaterialTheme.typography.labelLarge.copy(
+                                            fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal
+                                        ),
+                                        color = if (selected) MindFlowColors.TextPrimary else MindFlowColors.TextMuted
+                                    )
+                                }
                             }
                         }
                     }
                 }
 
-                // --- Repeat only once (flat row under weekdays; no Surface) ---
+                // --- Repeat only once row ---
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 6.dp), // slight indent so it feels "under" the pill
+                        .padding(horizontal = 6.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Column(modifier = Modifier.weight(1f)) {
@@ -247,7 +245,20 @@ fun AddEditTaskScreen(
                         checked = repeatOnlyOnce,
                         onCheckedChange = { checked ->
                             repeatOnlyOnce = checked
-                            if (checked) selectedDays.clear()
+
+                            if (checked) {
+                                // switching to one-time: clear weekly selection
+                                selectedDays.clear()
+                            } else {
+                                // switching back to weekly: clear one-time fields
+                                dayText = ""
+                                monthText = ""
+                                yearText = ""
+
+                                dayInteracted = false
+                                monthInteracted = false
+                                yearInteracted = false
+                            }
                         }
                     )
                 }
@@ -257,7 +268,7 @@ fun AddEditTaskScreen(
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = 6.dp), // align with the toggle row
+                            .padding(horizontal = 6.dp),
                         verticalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
                         Text(
@@ -307,7 +318,6 @@ fun AddEditTaskScreen(
                             )
                         }
 
-                        // Only show error message if any field has been interacted with
                         if ((dayInteracted || monthInteracted || yearInteracted) && dateError != null) {
                             Text(
                                 text = dateError,
@@ -344,11 +354,12 @@ fun AddEditTaskScreen(
                         textColor = MindFlowColors.OnPrimary,
                         containerColor = MindFlowColors.Primary
                     )
-                    if (taskId != -1L) { // Only show if editing an existing task
+
+                    if (taskId != -1L) {
                         Button(
                             onClick = {
-                                viewModel.deleteTask(taskId) // Delete the task
-                                navController.popBackStack() // Go back after deletion
+                                viewModel.deleteTask(taskId)
+                                navController.popBackStack()
                             },
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -395,11 +406,11 @@ private fun NumberDropdownField(
             modifier = Modifier
                 .menuAnchor()
                 .fillMaxWidth()
-                .defaultMinSize(minWidth = 0.dp), // Maintain flexibility
+                .defaultMinSize(minWidth = 0.dp),
             label = {
                 Text(
                     label,
-                    style = MaterialTheme.typography.bodySmall.copy(fontSize = 12.sp) // Reduce label font size
+                    style = MaterialTheme.typography.bodySmall.copy(fontSize = 12.sp)
                 )
             },
             singleLine = true,
@@ -431,4 +442,3 @@ private fun NumberDropdownField(
         }
     }
 }
-

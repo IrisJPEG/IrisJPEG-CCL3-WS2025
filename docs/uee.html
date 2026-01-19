@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>User Experience Evaluation Protocol</title>
+  <style>
+    :root{
+      --bg: #0f1220;
+      --card: rgba(255,255,255,0.06);
+      --card-2: rgba(255,255,255,0.09);
+      --text: rgba(255,255,255,0.92);
+      --muted: rgba(255,255,255,0.70);
+      --faint: rgba(255,255,255,0.55);
+      --line: rgba(255,255,255,0.14);
+      --accent: #b79cff;
+      --accent-2: #67d9c4;
+      --shadow: 0 18px 60px rgba(0,0,0,0.45);
+      --radius: 18px;
+    }
+
+    *{ box-sizing: border-box; }
+    body{
+      margin: 0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Apple Color Emoji","Segoe UI Emoji";
+      color: var(--text);
+      background:
+        radial-gradient(1200px 700px at 15% -10%, rgba(183,156,255,0.30), transparent 55%),
+        radial-gradient(900px 600px at 95% 10%, rgba(103,217,196,0.22), transparent 55%),
+        radial-gradient(700px 500px at 55% 110%, rgba(183,156,255,0.18), transparent 60%),
+        var(--bg);
+      line-height: 1.55;
+    }
+
+    a{ color: inherit; }
+
+    /* NAV BAR */
+    nav{
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      backdrop-filter: blur(10px);
+      background: rgba(15,18,32,0.72);
+      border-bottom: 1px solid var(--line);
+    }
+    .nav-inner{
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 12px 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+    }
+    .brand{
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 800;
+      letter-spacing: -0.01em;
+      text-decoration: none;
+    }
+    .brand-mark{
+      width: 34px;
+      height: 34px;
+      border-radius: 12px;
+      display: grid;
+      place-items: center;
+      background: linear-gradient(180deg, rgba(183,156,255,0.30), rgba(103,217,196,0.16));
+      border: 1px solid rgba(255,255,255,0.16);
+      color: var(--text);
+      font-size: 14px;
+    }
+    .brand span{
+      color: var(--text);
+      font-size: 14px;
+      white-space: nowrap;
+    }
+    .nav-links{
+      list-style: none;
+      display: flex;
+      gap: 10px;
+      margin: 0;
+      padding: 0;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+    .nav-links a{
+      text-decoration: none;
+      padding: 8px 10px;
+      border-radius: 999px;
+      border: 1px solid transparent;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.01em;
+    }
+    .nav-links a:hover{
+      color: var(--text);
+      background: rgba(255,255,255,0.06);
+      border-color: rgba(255,255,255,0.10);
+    }
+    /* optional: mark current page */
+    .nav-links a[aria-current="page"]{
+      color: var(--text);
+      background: rgba(183,156,255,0.16);
+      border-color: rgba(183,156,255,0.26);
+    }
+
+    .wrap{
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 18px 18px 56px; /* slightly reduced because nav is sticky */
+    }
+
+    header{
+      padding: 26px 22px;
+      border: 1px solid var(--line);
+      background: linear-gradient(180deg, rgba(255,255,255,0.09), rgba(255,255,255,0.05));
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      position: relative;
+      overflow: hidden;
+    }
+    header:before{
+      content:"";
+      position:absolute;
+      inset:-2px;
+      background: radial-gradient(600px 220px at 20% 10%, rgba(183,156,255,0.22), transparent 60%),
+                  radial-gradient(520px 220px at 90% 30%, rgba(103,217,196,0.18), transparent 55%);
+      pointer-events:none;
+      filter: blur(2px);
+    }
+    header > *{ position: relative; }
+
+    .kicker{
+      display: inline-flex;
+      gap: 10px;
+      align-items: center;
+      font-size: 12px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 10px;
+    }
+    .pill{
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid var(--line);
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      font-size: 11px;
+      color: var(--muted);
+    }
+    h1{
+      margin: 0 0 10px;
+      font-size: clamp(22px, 2.6vw, 34px);
+      line-height: 1.15;
+      letter-spacing: -0.02em;
+    }
+    .meta{
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px 12px;
+      margin-top: 10px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+    .meta span{
+      padding: 6px 10px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: rgba(255,255,255,0.05);
+    }
+
+    main{
+      margin-top: 18px;
+      display: grid;
+      gap: 16px;
+    }
+
+    .card{
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: rgba(255,255,255,0.06);
+      box-shadow: 0 14px 46px rgba(0,0,0,0.35);
+      overflow: hidden;
+    }
+    .card .hd{
+      padding: 16px 18px;
+      background: rgba(255,255,255,0.05);
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .card .hd h2{
+      margin: 0;
+      font-size: 16px;
+      letter-spacing: -0.01em;
+    }
+    .card .bd{
+      padding: 18px;
+    }
+
+    .note{
+      color: var(--muted);
+      font-size: 14px;
+      margin: 0;
+    }
+
+    .q{
+      display: grid;
+      gap: 12px;
+    }
+    .q-title{
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+    .q-num{
+      width: 34px;
+      height: 34px;
+      border-radius: 12px;
+      display: grid;
+      place-items: center;
+      background: linear-gradient(180deg, rgba(183,156,255,0.26), rgba(103,217,196,0.10));
+      border: 1px solid rgba(255,255,255,0.16);
+      color: rgba(255,255,255,0.92);
+      font-weight: 700;
+      flex: 0 0 auto;
+    }
+    .q-title h3{
+      margin: 0;
+      font-size: 16px;
+      line-height: 1.25;
+    }
+
+    .grid-2{
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 12px;
+    }
+    @media (min-width: 820px){
+      .grid-2{ grid-template-columns: 1fr 1fr; }
+    }
+
+    .label{
+      font-size: 12px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--faint);
+      margin: 0 0 6px;
+    }
+    .box{
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: rgba(0,0,0,0.14);
+      padding: 12px 12px;
+    }
+    .box ul, .box ol{
+      margin: 8px 0 0 18px;
+      padding: 0;
+    }
+    .box li{ margin: 6px 0; color: var(--text); }
+    .box p{ margin: 0; color: var(--text); }
+
+    /* Table */
+    table{
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: rgba(0,0,0,0.14);
+    }
+    thead th{
+      text-align: left;
+      font-size: 12px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--faint);
+      padding: 12px 12px;
+      border-bottom: 1px solid var(--line);
+      background: rgba(255,255,255,0.04);
+      vertical-align: bottom;
+    }
+    tbody td{
+      padding: 12px 12px;
+      border-bottom: 1px solid rgba(255,255,255,0.10);
+      color: var(--text);
+      vertical-align: top;
+      font-size: 14px;
+    }
+    tbody tr:last-child td{ border-bottom: 0; }
+    .muted{ color: var(--muted); }
+
+    .tag{
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,0.06);
+      color: var(--muted);
+      font-size: 12px;
+      white-space: nowrap;
+    }
+    .tag strong{ color: var(--text); font-weight: 700; }
+
+    .legend{
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    footer{
+      margin-top: 16px;
+      color: var(--faint);
+      font-size: 13px;
+      text-align: center;
+    }
+
+    /* Print-friendly */
+    @media print{
+      nav{ display: none; }
+      body{ background: #fff; color: #111; }
+      header, .card{ box-shadow: none; }
+      .card, header{ border-color: #ddd; background: #fff; }
+      .pill, .meta span, .tag, table{ border-color: #ddd; }
+      .box{ background: #fff; border-color: #ddd; }
+      .label, .muted, .note{ color: #444; }
+      thead th{ color: #444; }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- NAV BAR (links back to overview) -->
+  <nav aria-label="Primary navigation">
+    <div class="nav-inner">
+      <a class="brand" href="index.html">
+        <div class="brand-mark">MF</div>
+        <span>MindFlow</span>
+      </a>
+
+      <ul class="nav-links">
+        <li><a href="index.html">Overview</a></li>
+        <li><a href="uee.html" aria-current="page">UX Evaluation</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <div class="wrap">
+    <header>
+      
+      <h1>User Experience Evaluation Protocol</h1>
+      <div class="meta">
+        <span><strong>Authors:</strong> Jan Dragutan, Nina Janikovicova</span>
+      </div>
+    </header>
+
+    <main>
+      <!-- Questions -->
+      <section class="card" aria-label="Evaluation Questions">
+        <div class="hd">
+          <h2>Evaluation Questions & Tasks</h2>
+          <span class="tag"><strong>Method:</strong> Task-based usability + questionnaires</span>
+        </div>
+        <div class="bd">
+          <div class="q">
+            <!-- Q1 -->
+            <div class="q-title">
+              <div class="q-num">1</div>
+              <h3>Can users efficiently manage their weekly tasks in the app?</h3>
+            </div>
+
+            <div class="grid-2">
+              <div class="box">
+                <p class="label">Dependent variables</p>
+                <ul>
+                  <li>Ease of use of the task manager (1–7)</li>
+                  <li>Completion time</li>
+                  <li>Success rate</li>
+                </ul>
+              </div>
+
+              <div class="box">
+                <p class="label">Testing</p>
+                <ul>
+                  <li>SEQ</li>
+                  <li>Additional feedback questions</li>
+                </ul>
+              </div>
+            </div>
+
+            <div class="box">
+              <p class="label">Task</p>
+              <ol>
+                <li>Think about the things you do weekly (or have to do this week).</li>
+                <li>Log a couple of tasks into our app (at least 3 for today) and view them afterward.</li>
+                <li>Edit or delete one of the tasks.</li>
+                <li>Mark today’s tasks as complete.</li>
+                <li>Check what tasks you have to do on <strong>February 2</strong>.</li>
+              </ol>
+            </div>
+
+            <hr style="border:0;border-top:1px solid var(--line); margin: 8px 0 2px;">
+
+            <!-- Q2 -->
+            <div class="q-title">
+              <div class="q-num">2</div>
+              <h3>Do the breathing exercises in our app help users relax, and how well?</h3>
+            </div>
+
+            <div class="grid-2">
+              <div class="box">
+                <p class="label">Dependent variable</p>
+                <ul>
+                  <li>Help with relaxation</li>
+                </ul>
+              </div>
+
+              <div class="box">
+                <p class="label">Testing</p>
+                <ul>
+                  <li>SEQ</li>
+                  <li>Question regarding help with relaxation (1–5)</li>
+                </ul>
+              </div>
+            </div>
+
+            <div class="box">
+              <p class="label">Task</p>
+              <ol>
+                <li>Try out a breathing exercise.</li>
+                <li>Share your thoughts after completing it.</li>
+              </ol>
+            </div>
+
+            <hr style="border:0;border-top:1px solid var(--line); margin: 8px 0 2px;">
+
+            <!-- Q3 -->
+            <div class="q-title">
+              <div class="q-num">3</div>
+              <h3>Do users find the mood tracking intuitive?</h3>
+            </div>
+
+            <div class="grid-2">
+              <div class="box">
+                <p class="label">Dependent variable</p>
+                <ul>
+                  <li>Ease of use (1–7)</li>
+                </ul>
+              </div>
+
+              <div class="box">
+                <p class="label">Testing</p>
+                <ul>
+                  <li>SEQ</li>
+                </ul>
+              </div>
+            </div>
+
+            <div class="box">
+              <p class="label">Task</p>
+              <ol>
+                <li>Input your mood.</li>
+                <li>Change it afterward.</li>
+                <li>View your mood journey.</li>
+              </ol>
+            </div>
+
+            <hr style="border:0;border-top:1px solid var(--line); margin: 8px 0 2px;">
+
+            <!-- Q4 -->
+            <div class="q-title">
+              <div class="q-num">4</div>
+              <h3>Qualitative evaluation</h3>
+            </div>
+
+            <div class="box">
+              <p class="label">Task</p>
+              <ol>
+                <li>If you were to leave a note to your future self, how would you do it?</li>
+                <li>What do you think about this feature?</li>
+              </ol>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Heuristic Evaluation Results -->
+      <section class="card" aria-label="Heuristic Evaluation Results">
+        <div class="hd">
+          <h2>Heuristic Evaluation Results</h2>
+          <span class="tag"><strong>Scale:</strong> Severity 1–3</span>
+        </div>
+        <div class="bd">
+          <p class="note">
+            Table below summarizes the key observations, the corresponding heuristic number, how many experts observed it,
+            and the severity rating.
+          </p>
+
+          <div style="margin-top: 12px; overflow-x: auto;">
+            <table>
+              <thead>
+                <tr>
+                  <th style="min-width: 320px;">Observation</th>
+                  <th style="min-width: 150px;">Heuristic number</th>
+                  <th style="min-width: 170px;">Observed by (experts)</th>
+                  <th style="min-width: 130px;">Severity (1–3)</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>
+                    Some cards are clickable, while some have buttons
+                    <span class="muted">(fixed – changed all to buttons)</span>
+                  </td>
+                  <td>4</td>
+                  <td>2</td>
+                  <td>3</td>
+                </tr>
+                <tr>
+                  <td>
+                    Play button looked active when it was not (in breathing)
+                    <span class="muted">(fixed – separated play button, added bright background when active)</span>
+                  </td>
+                  <td>1</td>
+                  <td>2</td>
+                  <td>2</td>
+                </tr>
+                <tr>
+                  <td>
+                    Delete action does not have a confirmation window
+                  </td>
+                  <td>5</td>
+                  <td>1</td>
+                  <td>2</td>
+                </tr>
+                <tr>
+                  <td>
+                    In mood journey, the back button is hard to recognize due to poor contrast
+                  </td>
+                  <td>6</td>
+                  <td>1</td>
+                  <td>1</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="legend" aria-label="Severity legend">
+            <span class="tag"><strong>1</strong> Minor</span>
+            <span class="tag"><strong>2</strong> Major</span>
+            <span class="tag"><strong>3</strong> Immediate fix</span>
+          </div>
+        </div>
+      </section>
+
+      <footer>
+        User Experience Evaluation Protocol — Jan Dragutan, Nina Janikovicova
+      </footer>
+    </main>
+  </div>
+</body>
+</html>

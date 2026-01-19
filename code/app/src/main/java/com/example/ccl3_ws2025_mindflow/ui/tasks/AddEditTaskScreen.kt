@@ -19,6 +19,10 @@ import com.example.ccl3_ws2025_mindflow.ui.theme.*
 import java.util.Locale
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.ui.unit.sp
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -157,7 +161,7 @@ fun AddEditTaskScreen(
                 verticalArrangement = Arrangement.spacedBy(14.dp)
             ) {
 
-                OutlinedTextField(
+            OutlinedTextField(
                     value = title,
                     onValueChange = { title = it },
                     modifier = Modifier.fillMaxWidth(),
@@ -354,13 +358,11 @@ fun AddEditTaskScreen(
                         textColor = MindFlowColors.OnPrimary,
                         containerColor = MindFlowColors.Primary
                     )
+                    if (taskId != -1L) { // Only show if editing an existing task
+                        var showDeleteDialog by remember { mutableStateOf(false) }
 
-                    if (taskId != -1L) {
                         Button(
-                            onClick = {
-                                viewModel.deleteTask(taskId)
-                                navController.popBackStack()
-                            },
+                            onClick = { showDeleteDialog = true },
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .height(Dimens.PillHeight),
@@ -377,6 +379,33 @@ fun AddEditTaskScreen(
                                 color = MindFlowColors.Danger
                             )
                         }
+
+                        if (showDeleteDialog) {
+                            AlertDialog(
+                                onDismissRequest = { showDeleteDialog = false },
+                                title = { Text("Confirm deletion") },
+                                text = { Text("Are you sure you want to delete this task?") },
+                                confirmButton = {
+                                    TextButton(
+                                        onClick = {
+                                            showDeleteDialog = false
+                                            viewModel.deleteTask(taskId)
+                                            navController.popBackStack()
+                                        }
+                                    ) {
+                                        Text("Delete", color = MindFlowColors.Danger)
+                                    }
+                                },
+                                dismissButton = {
+                                    TextButton(
+                                        onClick = { showDeleteDialog = false }
+                                    ) {
+                                        Text("Cancel")
+                                    }
+                                }
+                            )
+                        }
+
                     }
                 }
             }

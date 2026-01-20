@@ -215,7 +215,7 @@ private fun MoodJourneyHeader(
                         painter = painterResource(id = R.drawable.circle_dashed),
                         contentDescription = "Set mood",
                         modifier = Modifier
-                            .size(32.dp)
+                            .size(29.dp)
                             .offset(y = -2.dp)
                     )
                 } else {
@@ -224,16 +224,24 @@ private fun MoodJourneyHeader(
                         contentDescription = "Edit mood",
                         tint = MindFlowColors.TextPrimary,
                         modifier = Modifier
-                            .size(32.dp)
-                            .offset(y = -2.dp)
+                            .size(30.dp)
+                            .offset(y = -4.dp)
                     )
                 }
 
+                // 👇 ADD THIS RIGHT HERE
+                val editTextOffsetY = if (showMoodPlaceholder) {
+                    (-4).dp
+                } else {
+                    (-8).dp
+                }
+
+                // EDIT LABEL
                 Text(
                     text = "Edit",
                     style = MaterialTheme.typography.labelSmall,
                     color = MindFlowColors.TextPrimary,
-                    modifier = Modifier.offset(y = (-6).dp)
+                    modifier = Modifier.offset(y = editTextOffsetY)
                 )
             }
         }

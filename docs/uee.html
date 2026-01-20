@@ -645,13 +645,58 @@
       </section>
 
       <section class="card">
-        <div class="hd">
+        <div class="hd" >
           <h2>Test Results</h2>
         </div>
         <div class="bd">
-            <p class="note">
-                The table below contains the SEQ score for each of our tasks
+            <p class="note" style="margin-bottom: 12px; overflow-x: auto;">
+                The table below contains the average SEQ scores for each of our tasks, and the final average score across all tasks.
             </p>
+          <table>
+            <thead>
+              <tr>
+                <th style="min-width: 320px;">Task</th>
+                <th style="min-width: 150px;">Average SEQ Score (1–7)</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Mood tracking</td>
+                <td>5.6</td>
+              </tr>
+              <tr>
+                <td>Task logging</td>
+                <td>6.1</td>
+              </tr>
+              <tr>
+                <td>Task editing</td>
+                <td>7.0</td>
+              </tr>
+              <tr>
+                <td>Task completion marking</td>
+                <td>6.8</td>
+              </tr>
+              <tr>
+                <td>Viewing future task</td>
+                <td>6.5</td>
+              </tr>
+              <tr>
+                <td>Breathing exercises</td>
+                <td>6.1</td>
+              </tr>
+              <tr>
+                <td><strong>Final Average Score</strong></td>
+                <td><strong>6.3</strong></td>
+              </tr>
+            </tbody>
+          </table>
+          <p class = "note" style="margin-bottom: 12px; margin-top: 12px; overflow-x: auto;">
+              After analyzing the results, we can conclude that users found our app quite easy to use, with an overall
+            average SEQ score of 6.3 out of 7. In terms of the qualitative evaluation and additional feedback some users
+            reported slight inconsistencies in our app's UI, including some cards being clickable while others having buttons.
+            Another user felt confusion when it came to the play button for the breathing exercises, as it appeared active when it was not.
+            We have taken their feedback into consideration and implemented the requested changes as well as fixed the issues found during our heuristic evaluation.
+          </p>
         </div>
       </section>
 

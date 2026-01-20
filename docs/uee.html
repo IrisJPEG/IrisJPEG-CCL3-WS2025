@@ -330,6 +330,72 @@
       text-align: center;
     }
 
+    /* Floating APK download button (bottom-right) */
+.apk-fab{
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+  z-index: 9999;
+
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+
+  padding: 12px 14px;
+  border-radius: 999px;
+
+  background: rgba(255,255,255,0.10);
+  border: 1px solid rgba(255,255,255,0.18);
+  backdrop-filter: blur(10px);
+
+  color: rgba(255,255,255,0.92);
+  text-decoration: none;
+
+  box-shadow: 0 18px 60px rgba(0,0,0,0.45);
+}
+
+.apk-fab:hover{
+  transform: translateY(-1px);
+  background: rgba(255,255,255,0.14);
+}
+
+.apk-fab:active{
+  transform: translateY(0px);
+}
+
+.apk-fab:focus-visible{
+  outline: 2px solid rgba(183,156,255,0.9);
+  outline-offset: 3px;
+}
+
+.apk-fab__icon{
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
+  object-fit: cover;
+  flex: 0 0 auto;
+}
+
+.apk-fab__text{
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+  white-space: nowrap;
+}
+
+/* Mobile: make it a compact pill */
+@media (max-width: 480px){
+  .apk-fab{
+    right: 14px;
+    bottom: 14px;
+    padding: 10px 12px;
+  }
+  .apk-fab__text{
+    font-size: 13px;
+  }
+}
+
+
     /* Print-friendly */
     @media print{
       nav{ display: none; }
@@ -594,5 +660,14 @@
       </footer>
     </main>
   </div>
+  <!-- Floating Download APK button -->
+<a class="apk-fab"
+   href="apk/MindFlow.apk"
+   download="MindFlow.apk"
+   aria-label="Download MindFlow APK">
+  <img src="img/icon.png" alt="" class="apk-fab__icon" />
+  <span class="apk-fab__text">Download APK</span>
+</a>
+
 </body>
 </html>

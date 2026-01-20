@@ -1,83 +1,298 @@
-body {
-    font-family: Arial, sans-serif;
-    line-height: 1.6;
-    margin: 0;
-    padding: 0;
-    background-color: #f0f4f8;
-
-    color: #333;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-}
-header {
-    margin-bottom: 40px;
-    color: #ffffff;
-
-    width: 100%;
-    background-color: #38c9dd;
-
-    display: flex;
-    flex-direction: row;
-    gap: 1rem;
-    align-items: center;
-    justify-content: space-around;
-    padding: 24px;
+:root{
+  --bg: #0f1220;
+  --card: rgba(255,255,255,0.06);
+  --card-2: rgba(255,255,255,0.09);
+  --text: rgba(255,255,255,0.92);
+  --muted: rgba(255,255,255,0.70);
+  --faint: rgba(255,255,255,0.55);
+  --line: rgba(255,255,255,0.14);
+  --accent: #b79cff;
+  --accent-2: #67d9c4;
+  --shadow: 0 18px 60px rgba(0,0,0,0.45);
+  --radius: 18px;
 }
 
-header p, h1{
-    margin: 0;
-    padding: 0;
+*{ box-sizing: border-box; }
+
+body{
+  margin: 0;
+  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Apple Color Emoji","Segoe UI Emoji";
+  color: var(--text);
+  background:
+    radial-gradient(1200px 700px at 15% -10%, rgba(183,156,255,0.30), transparent 55%),
+    radial-gradient(900px 600px at 95% 10%, rgba(103,217,196,0.22), transparent 55%),
+    radial-gradient(700px 500px at 55% 110%, rgba(183,156,255,0.18), transparent 60%),
+    var(--bg);
+  line-height: 1.55;
 }
 
-h2, h1 {
-    margin: 0;
-    padding: 0;
-}
-ul {
-    list-style-type: disc;
-    padding-left: 20px;
-}
-.screenshots img {
-    height: 100%;
-    max-width: 200px;
-    display: block;
-    margin: 15px auto;
+a{ color: inherit; }
+
+/* NAV BAR */
+nav{
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  backdrop-filter: blur(10px);
+  background: rgba(15,18,32,0.72);
+  border-bottom: 1px solid var(--line);
 }
 
-.screenshots{
-    display: flex;
-    flex-wrap: wrap;
-    gap: 20px;
-    align-items: flex-start;
+/* Supports BOTH your old index.html nav markup and the uee.html nav markup */
+.nav-inner,
+nav{
+  /* when nav is the container (index.html), these won't hurt */
 }
 
+.nav-inner{
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 12px 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+/* Index.html currently has: <div class="logo">MindFlow</div> */
+nav .logo{
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  color: var(--text);
+}
+
+/* uee.html brand */
+.brand{
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  text-decoration: none;
+}
+.brand-mark{
+  width: 34px;
+  height: 34px;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  background: linear-gradient(180deg, rgba(183,156,255,0.30), rgba(103,217,196,0.16));
+  border: 1px solid rgba(255,255,255,0.16);
+  color: var(--text);
+  font-size: 14px;
+}
+.brand span{
+  color: var(--text);
+  font-size: 14px;
+  white-space: nowrap;
+}
+
+/* Index.html nav list: nav ul */
+nav ul{
+  list-style: none;
+  display: flex;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+nav ul li{ margin: 0; }
+
+nav ul li a,
+.nav-links a{
+  text-decoration: none;
+  padding: 8px 10px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+nav ul li a:hover,
+.nav-links a:hover{
+  color: var(--text);
+  background: rgba(255,255,255,0.06);
+  border-color: rgba(255,255,255,0.10);
+}
+
+/* optional: mark current page */
+.nav-links a[aria-current="page"],
+nav ul li a[aria-current="page"]{
+  color: var(--text);
+  background: rgba(183,156,255,0.16);
+  border-color: rgba(183,156,255,0.26);
+}
+
+/* Layout wrappers */
+.wrap,
 main{
-    width: 70%;
-    margin-bottom: 30px;
-    background-color: #fff;
-    padding: 20px;
-    border-radius: 10px;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 18px 18px 56px;
 }
 
-.button{
-    display: inline-block;
-    padding: 10px 20px;
-    background: rgba(255, 255, 255, 0.16);
-    border-style: solid;
-    border-width: 0.5px;
-    border-color: white;
-    color: #fff;
-    text-decoration: none;
-    border-radius: 8px;
-    width: fit-content;
-    transition: background-color 0.3s ease;
+/* Index.html uses <main> and <header> */
+header{
+  padding: 26px 22px;
+  border: 1px solid var(--line);
+  background: linear-gradient(180deg, rgba(255,255,255,0.09), rgba(255,255,255,0.05));
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  position: relative;
+  overflow: hidden;
+  text-align: left; /* overrides your old centered style */
+  margin-bottom: 18px;
 }
 
+header:before{
+  content:"";
+  position:absolute;
+  inset:-2px;
+  background:
+    radial-gradient(600px 220px at 20% 10%, rgba(183,156,255,0.22), transparent 60%),
+    radial-gradient(520px 220px at 90% 30%, rgba(103,217,196,0.18), transparent 55%);
+  pointer-events:none;
+  filter: blur(2px);
+}
+
+header > *{ position: relative; }
+
+h1{
+  margin: 0 0 10px;
+  font-size: clamp(22px, 2.6vw, 34px);
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  color: var(--text);
+}
+
+header p{
+  margin: 0;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+/* Sections on index.html */
+section{
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: rgba(255,255,255,0.06);
+  box-shadow: 0 14px 46px rgba(0,0,0,0.35);
+  padding: 18px;
+  margin: 0 0 16px 0;
+}
+
+h2{
+  margin: 0 0 10px 0;
+  font-size: 16px;
+  letter-spacing: -0.01em;
+  color: var(--text);
+}
+
+p{ color: var(--text); }
+
+ul{
+  margin: 8px 0 0 18px;
+  padding: 0;
+}
+li{ margin: 6px 0; color: var(--text); }
+
+.hifi-scroll{
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  padding: 10px 6px 14px;
+  margin-top: 6px;
+
+  overscroll-behavior-x: contain;
+  -webkit-overflow-scrolling: touch;
+
+  /* optional */
+  scroll-snap-type: x mandatory;
+  align-items: flex-start; /* prevents vertical stretching */
+}
+
+.hifi-scroll .hifi-img{
+  flex: 0 0 auto;
+  width: auto !important;
+  max-width: none !important;
+  height: auto !important;
+
+  max-height: 450px;   /* ← adjust this number */
+
+  display: block;
+  margin: 0 !important;
+
+  border: 1px solid rgba(255,255,255,0.18);
+  border-radius: 14px;
+  box-shadow: 0 14px 46px rgba(0,0,0,0.25);
+
+  scroll-snap-align: start;
+}
+
+
+
+/* Make items in the horizontal scroller behave like cards */
+.hifi-scroll img{
+  flex: 0 0 auto;
+
+  /* adjust to taste */
+  width: 240px;
+  max-width: 70vw;
+
+  /* keep your existing image look, but remove auto-centering */
+  margin: 0;
+
+  scroll-snap-align: start;
+}
+
+/* Optional: subtle scrollbar styling (works in modern browsers) */
+.hifi-scroll{
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255,255,255,0.18) transparent;
+}
+.hifi-scroll::-webkit-scrollbar{
+  height: 10px;
+}
+.hifi-scroll::-webkit-scrollbar-track{
+  background: transparent;
+}
+.hifi-scroll::-webkit-scrollbar-thumb{
+  background: rgba(255,255,255,0.16);
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+/* User flow stays under the scroller and uses full available width */
+.userflow-wrap{
+  margin-top: 14px;
+}
 .userflow{
-    width:400px;
+  max-width: 980px; /* match your page max width */
+  width: 100%;
+  margin: 0 auto;
+}
+
+/* Default images on the page (NOT the Hi-Fi scroller) */
+section img:not(.userflow):not(.hifi-img){
+  width: 100%;
+  max-width: 520px;
+  display: block;
+  margin: 14px auto;
+  border: 1px solid rgba(255,255,255,0.18);
+  border-radius: 14px;
+  box-shadow: 0 14px 46px rgba(0,0,0,0.25);
+}
+
+/* Print-friendly (matches uee.html behavior) */
+@media print{
+  nav{ display: none; }
+  body{ background: #fff; color: #111; }
+  header, section{ box-shadow: none; }
+  header, section{ border-color: #ddd; background: #fff; }
+  h1, h2, p, li{ color: #111; }
 }

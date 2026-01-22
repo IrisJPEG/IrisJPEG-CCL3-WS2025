@@ -21,16 +21,7 @@ interface TaskDao {
     @Query("DELETE FROM tasks WHERE id = :id")
     suspend fun deleteById(id: Long)
 
-    /**
-     * Today tasks: tasks active on weekday joined with completion state for dateKey.
-     * weekday is 1..7 (Mon..Sun).
-     *
-     * NOTE: REPLACE(...) removes accidental spaces in daysCsv so both "1,2,3"
-     * and "1, 2, 3" work.
-     *
-     * IMPORTANT: createdDateKey <= dateKey prevents tasks from appearing in past days
-     * before they were created.
-     */
+
     @Query(
         """
 SELECT 

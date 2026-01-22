@@ -10,7 +10,7 @@ data class TaskEntity(
     val title: String,
 
     // Repeating tasks:
-    val daysCsv: String,        // "1,2,3" (Mon=1 ... Sun=7). Can be "" for one-time tasks.
+    val daysCsv: String,
 
     // One-time tasks:
     val isOneTime: Boolean = false,

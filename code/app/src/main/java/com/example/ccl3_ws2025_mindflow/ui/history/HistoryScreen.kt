@@ -32,7 +32,6 @@ import java.util.Locale
 
 private enum class HistoryViewMode { WEEK, MONTH }
 
-// --- Header formatting helpers ---
 private val WeekMonthFmt = DateTimeFormatter.ofPattern("MMM", Locale.ENGLISH)   // Jan
 private val MonthMonthFmt = DateTimeFormatter.ofPattern("MMMM", Locale.ENGLISH) // January
 private val DayFmt = DateTimeFormatter.ofPattern("d", Locale.ENGLISH)
@@ -90,9 +89,7 @@ fun HistoryScreen(
         onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
     }
 
-    // --- NEW: computed header label ---
-    // WEEK: parse LocalDate from isoKey (yyyy-MM-dd), then format like "Jan 8–14"
-    // MONTH: show only month ("Jan")
+
     val computedHeaderLabel = remember(mode, weekData, monthCells, headerLabel) {
         when (mode) {
             HistoryViewMode.WEEK -> {
@@ -156,7 +153,6 @@ fun HistoryScreen(
                                 )
                             }
 
-                            // --- CHANGED: use computedHeaderLabel ---
                             Text(computedHeaderLabel, style = MaterialTheme.typography.titleLarge)
 
                             IconButton(
@@ -204,7 +200,6 @@ fun HistoryScreen(
                 }
 
                 if (mode == HistoryViewMode.WEEK) {
-                    // ---------------- WEEK VIEW ----------------
                     LazyColumn(
                         modifier = Modifier.fillMaxSize(),
                         verticalArrangement = Arrangement.spacedBy(12.dp)

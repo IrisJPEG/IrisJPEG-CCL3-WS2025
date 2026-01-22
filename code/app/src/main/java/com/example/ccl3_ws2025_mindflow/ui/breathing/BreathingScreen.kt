@@ -61,7 +61,7 @@ fun BreathingScreen(
         }
     }
 
-    // --- UI ---
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -75,7 +75,6 @@ fun BreathingScreen(
                 )
             )
     ) {
-        // --- Top App Bar with back arrow ---
         CenterAlignedTopAppBar(
             title = { Text(exercise.name, style = MaterialTheme.typography.titleLarge ) },
             navigationIcon = {
@@ -89,14 +88,12 @@ fun BreathingScreen(
             modifier = Modifier.fillMaxWidth()
         )
 
-        // --- Centered breathing content ---
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier.align(Alignment.Center)
         ) {
             Spacer(Modifier.height(8.dp))
 
-            // --- Helper Text Above Circles ---
             Text(
                 text = helperText,
                 style = MaterialTheme.typography.titleMedium,
@@ -114,7 +111,6 @@ fun BreathingScreen(
             )
             Spacer(Modifier.height(16.dp))
 
-            // --- Breathing Circles ---
             Box(
                 modifier = Modifier
                     .size(200.dp)

@@ -1,4 +1,3 @@
-// FILE: app/src/main/java/com/example/ccl3_ws2025_mindflow/data/mood/MoodDao.kt
 package com.example.ccl3_ws2025_mindflow.data.mood
 
 import androidx.room.Dao

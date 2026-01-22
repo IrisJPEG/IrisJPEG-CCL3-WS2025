@@ -12,7 +12,7 @@ class TaskRepository(
     private val completionDao: TaskCompletionDao
 ) {
 
-    // --------- ISO date helpers (minSdk 24 safe) ----------
+
     private val isoFormatter = SimpleDateFormat("yyyy-MM-dd", Locale.US).apply {
         timeZone = TimeZone.getTimeZone("UTC")
     }
@@ -40,7 +40,6 @@ class TaskRepository(
         cal.add(Calendar.DAY_OF_YEAR, deltaDays)
         return isoFormatter.format(cal.time)
     }
-    // -----------------------------------------------------
 
     // Manage screen
     fun observeAllTasks(): Flow<List<TaskEntity>> = taskDao.observeAllTasks()
@@ -74,7 +73,6 @@ class TaskRepository(
         completionDao.getCompletionsForDate(dateKey)
     // --------------------------------------
 
-    // Single source of truth for parsing daysCsv (kept as you have it)
     fun taskIsActiveOnWeekday(daysCsv: String, weekday: Int): Boolean {
         return daysCsv
             .split(",")
@@ -82,10 +80,7 @@ class TaskRepository(
             .contains(weekday)
     }
 
-    /**
-     * IMPORTANT: This now also respects createdDateKey so tasks do NOT exist "in the past"
-     * before they were created.
-     */
+
     private suspend fun tasksScheduledForDateKey(dateKey: String): List<TaskEntity> {
         val weekday = weekdayMon1Sun7(dateKey)
         val all = taskDao.observeAllTasks().first()
@@ -105,7 +100,6 @@ class TaskRepository(
         }
     }
 
-    // --- streak logic (now minSdk 24 safe, and respects createdDateKey) ---
     suspend fun getDailyAllTaskStreak(todayKey: String): Int {
         var streak = 0
 
@@ -140,12 +134,5 @@ class TaskRepository(
         return streak
     }
 
-    suspend fun getTodayProgress(todayKey: String): Float {
-        val tasks = tasksScheduledForDateKey(todayKey)
-        if (tasks.isEmpty()) return 0f
 
-        val completions = completionDao.getCompletionsForDate(todayKey)
-        val completedCount = completions.count { it.isCompleted && tasks.any { t -> t.id == it.taskId } }
-        return completedCount.toFloat() / tasks.size.toFloat()
-    }
 }

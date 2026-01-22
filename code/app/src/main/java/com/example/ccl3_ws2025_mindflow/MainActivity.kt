@@ -1,4 +1,4 @@
-// FILE: app/src/main/java/com/example/ccl3_ws2025_mindflow/MainActivity.kt
+
 package com.example.ccl3_ws2025_mindflow
 
 import android.os.Bundle

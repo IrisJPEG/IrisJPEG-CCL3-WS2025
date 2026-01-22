@@ -24,7 +24,7 @@ fun MoodOverlay(
     onSelect: (MoodType) -> Unit,
     onDismissOnce: () -> Unit
 ) {
-    Dialog(onDismissRequest = { /* block dismiss to match overlay intent */ }) {
+    Dialog(onDismissRequest = {}) {
         Card(
             shape = RoundedCornerShape(Dimens.CardRadius),
             colors = CardDefaults.cardColors(containerColor = MindFlowColors.Surface),

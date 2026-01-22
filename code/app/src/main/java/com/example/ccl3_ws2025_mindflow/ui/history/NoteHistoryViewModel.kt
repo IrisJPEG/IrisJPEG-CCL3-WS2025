@@ -38,7 +38,7 @@ class NoteHistoryViewModel(
 
     private val _weekStart = MutableStateFlow(currentWeekStart())
 
-    /** Used by UI to disable → arrow */
+    // Used by UI to disable → arrow
     val isAtCurrentWeek: StateFlow<Boolean> =
         _weekStart
             .map { start ->

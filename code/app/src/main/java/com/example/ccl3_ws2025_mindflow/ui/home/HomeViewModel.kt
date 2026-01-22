@@ -157,7 +157,7 @@ class HomeViewModel(
     }
 
     private val tNoteFlow = _currentDate.flatMapLatest { date ->
-        // IMPORTANT: note you write "today for tomorrow-you" is stored under TODAY
+
         noteRepo.observeNoteForDate(todayKey(date))
     }
 

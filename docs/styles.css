@@ -161,6 +161,19 @@ header:before{
 
 header > *{ position: relative; }
 
+.meta-pill{
+  display: inline-block;
+  margin-top: 10px;
+  padding: 6px 10px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: rgba(255,255,255,0.05);
+  color: var(--muted);
+  font-size: 14px;
+}
+.meta-pill strong{ color: var(--text); font-weight: 700; }
+
+
 h1{
   margin: 0 0 10px;
   font-size: clamp(22px, 2.6vw, 34px);
@@ -287,6 +300,88 @@ section img:not(.userflow):not(.hifi-img){
   border-radius: 14px;
   box-shadow: 0 14px 46px rgba(0,0,0,0.25);
 }
+
+/* Floating APK download button (bottom-right) */
+.apk-fab{
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+  z-index: 9999;
+
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+
+  padding: 12px 14px;
+  border-radius: 999px;
+
+  background: rgba(255,255,255,0.10);
+  border: 1px solid rgba(255,255,255,0.18);
+  backdrop-filter: blur(10px);
+
+  color: rgba(255,255,255,0.92);
+  text-decoration: none;
+
+  box-shadow: 0 18px 60px rgba(0,0,0,0.45);
+}
+
+.apk-fab:hover{
+  transform: translateY(-1px);
+  background: rgba(255,255,255,0.14);
+}
+
+.apk-fab:active{
+  transform: translateY(0px);
+}
+
+.apk-fab:focus-visible{
+  outline: 2px solid rgba(183,156,255,0.9);
+  outline-offset: 3px;
+}
+
+.apk-fab__icon{
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
+  object-fit: cover;
+  flex: 0 0 auto;
+}
+
+.apk-fab__text{
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+  white-space: nowrap;
+}
+
+.video-wrap {
+  display: flex;
+  justify-content: center;
+  margin-top: 1.5rem;
+}
+
+.video-wrap video {
+  width: 100%;
+  max-width: 450px;      /* adjust to taste (800–1000px works well) */
+  border-radius: 16px;
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.35);
+  background: #000;      /* prevents white flashes before load */
+}
+
+
+
+/* Mobile: make it a compact pill */
+@media (max-width: 480px){
+  .apk-fab{
+    right: 14px;
+    bottom: 14px;
+    padding: 10px 12px;
+  }
+  .apk-fab__text{
+    font-size: 13px;
+  }
+}
+
 
 /* Print-friendly (matches uee.html behavior) */
 @media print{

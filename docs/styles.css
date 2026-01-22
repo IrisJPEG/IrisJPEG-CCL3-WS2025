@@ -341,6 +341,22 @@ section img:not(.userflow):not(.hifi-img){
   white-space: nowrap;
 }
 
+.video-wrap {
+  display: flex;
+  justify-content: center;
+  margin-top: 1.5rem;
+}
+
+.video-wrap video {
+  width: 100%;
+  max-width: 450px;      /* adjust to taste (800–1000px works well) */
+  border-radius: 16px;
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.35);
+  background: #000;      /* prevents white flashes before load */
+}
+
+
+
 /* Mobile: make it a compact pill */
 @media (max-width: 480px){
   .apk-fab{
